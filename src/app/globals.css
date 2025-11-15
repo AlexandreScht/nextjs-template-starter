@@ -1,8 +1,4 @@
 @import "tailwindcss";
-@plugin "daisyui";
-@plugin '../css/hero.ts';
-@source '../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
-@import "../css/theme-colors.css";
 
 :root {
   --background: #ffffff;
