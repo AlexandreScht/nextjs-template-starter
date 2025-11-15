@@ -1,5 +1,5 @@
 {
-  "name": "nextjs",
+  "name": "project_template",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -18,8 +18,14 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@typescript-eslint/eslint-plugin": "^8.46.4",
+    "@typescript-eslint/parser": "^8.46.4",
     "eslint": "^9",
     "eslint-config-next": "16.0.3",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "globals": "^16.5.0",
+    "prettier": "^3.6.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
