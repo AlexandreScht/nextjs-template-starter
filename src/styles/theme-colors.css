@@ -1,0 +1,32 @@
+/* Configuration des couleurs du thème pour TailwindCSS v4, HeroUI et DaisyUI */
+
+@theme {
+  /* Couleurs principales */
+  --color-primary: #faf600;
+  --color-primary-foreground: #ffffff;
+  
+  --color-secondary: #7828c8;
+  --color-secondary-foreground: #ffffff;
+  
+  --color-success: #17c964;
+  --color-success-foreground: #000000;
+  
+  --color-warning: #f5a524;
+  --color-warning-foreground: #000000;
+  
+  --color-danger: #f31260;
+  --color-danger-foreground: #ffffff;
+  
+  --color-info: #0072f5;
+  --color-info-foreground: #ffffff;
+  
+  --color-accent: #f000b8;
+  --color-accent-foreground: #ffffff;
+  
+  --color-default: #d4d4d8;
+  --color-default-foreground: #000000;
+  
+  /* Couleurs neutres */
+  --color-neutral: #3d4451;
+  --color-neutral-foreground: #ffffff;
+}

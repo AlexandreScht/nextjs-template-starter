@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function Home() {
   const sections = [
-    { name: "UI Library (HeroUI / DaisyUI)", href: undefined },
+    { name: "UI Library (HeroUI / DaisyUI)", href: "/uiLibrary" },
     { name: "Theme", href: undefined },
     { name: "Server Cache", href: undefined },
     { name: "Service", href: undefined },
