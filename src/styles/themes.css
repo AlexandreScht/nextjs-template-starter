@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+/* ============================================
+   SYSTÈME DE THÈMES - VARIABLES CSS
+   ============================================ */
+
+/* Thème Light (par défaut) */
+:root {
+  /* Couleurs de base */
+  --background: #ffffff;
+  --foreground: #171717;
+  
+  /* Couleurs de page */
+  --page-bg-from: #eff6ff;
+  --page-bg-to: #faf5ff;
+  
+  /* Couleurs de carte */
+  --card-bg: #ffffff;
+  --card-text: #1f2937;
+  --card-text-secondary: #4b5563;
+  --card-border: #e5e7eb;
+  
+  /* Couleurs sémantiques */
+  --color-primary: #3b82f6;
+  --color-secondary: #8b5cf6;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  
+  /* Couleurs de texte génériques */
+  --text-color: #1f2937;
+  --text-color-secondary: #6b7280;
+  --text-color-muted: #9ca3af;
+  
+  /* Couleurs d'information */
+  --info-bg: #eff6ff;
+  --info-text: #1e3a8a;
+  --info-border: #bfdbfe;
+}
+
+/* Thème Dark */
+.dark {
+  /* Couleurs de base */
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  
+  /* Couleurs de page */
+  --page-bg-from: #111827;
+  --page-bg-to: #1f2937;
+  
+  /* Couleurs de carte */
+  --card-bg: #1f2937;
+  --card-text: #ffffff;
+  --card-text-secondary: #d1d5db;
+  --card-border: #374151;
+  
+  /* Couleurs sémantiques - versions plus claires pour le dark */
+  --color-primary: #60a5fa;
+  --color-secondary: #a78bfa;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  
+  /* Couleurs de texte génériques */
+  --text-color: #f3f4f6;
+  --text-color-secondary: #d1d5db;
+  --text-color-muted: #9ca3af;
+  
+  /* Couleurs d'information */
+  --info-bg: rgba(30, 58, 138, 0.2);
+  --info-text: #93c5fd;
+  --info-border: rgba(59, 130, 246, 0.5);
+}
+
+/* Thème Custom (violet/rose) */
+.custom {
+  /* Couleurs de base */
+  --background: #667eea;
+  --foreground: #ffffff;
+  
+  /* Couleurs de page */
+  --page-bg-from: #7c3aed;
+  --page-bg-to: #ec4899;
+  
+  /* Couleurs de carte */
+  --card-bg: rgba(255, 255, 255, 0.1);
+  --card-text: #ffffff;
+  --card-text-secondary: #e9d5ff;
+  --card-border: rgba(255, 255, 255, 0.3);
+  
+  /* Couleurs sémantiques - palette harmonieuse avec violet/rose */
+  --color-primary: #fbbf24;
+  --color-secondary: #fb7185;
+  --color-success: #4ade80;
+  --color-warning: #fb923c;
+  --color-danger: #fca5a5;
+  
+  /* Couleurs de texte génériques */
+  --text-color: #ffffff;
+  --text-color-secondary: #f3e8ff;
+  --text-color-muted: #e9d5ff;
+  
+  /* Couleurs d'information */
+  --info-bg: rgba(255, 255, 255, 0.1);
+  --info-text: #ffffff;
+  --info-border: rgba(255, 255, 255, 0.3);
+}
+
