@@ -3,11 +3,15 @@
 import { useServiceInstance } from "@/hooks/useService";
 import type { CreateUserDto, User } from "@/services/example.service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 export function UsersForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [mutationCount, setMutationCount] = useState(0);
+  const [lastInvalidationAt, setLastInvalidationAt] = useState<number | null>(
+    null,
+  );
 
   const usersService = useServiceInstance((services) => services.users);
   const queryClient = useQueryClient();
@@ -21,12 +25,27 @@ export function UsersForm() {
       const created = await usersService.createUser(payload);
       return created;
     },
+    onMutate: async () => {
+      setMutationCount((count) => count + 1);
+    },
     onSuccess: () => {
       setName("");
       setEmail("");
+      setLastInvalidationAt(Date.now());
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
   });
+
+  const lastInvalidationLabel = useMemo(() => {
+    if (!lastInvalidationAt) {
+      return "—";
+    }
+    return new Intl.DateTimeFormat("fr-FR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    }).format(lastInvalidationAt);
+  }, [lastInvalidationAt]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -60,6 +79,24 @@ export function UsersForm() {
       {isSuccess ? (
         <p className="text-sm text-green-600">Utilisateur créé !</p>
       ) : null}
+      <dl className="grid grid-cols-2 gap-3 rounded border bg-gray-50 p-3 text-sm">
+        <div>
+          <dt className="text-xs uppercase text-gray-500">
+            Mutations envoyées
+          </dt>
+          <dd className="text-lg text-gray-700 font-semibold">
+            {mutationCount}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-xs uppercase text-gray-500">
+            Dernière invalidation cache
+          </dt>
+          <dd className="text-lg text-gray-700 font-semibold">
+            {lastInvalidationLabel}
+          </dd>
+        </div>
+      </dl>
       <div className="flex gap-2">
         <button
           type="submit"
