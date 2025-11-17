@@ -1,4 +1,4 @@
-import type { AxiosInstance } from "axios";
+import type { AxiosInstance, AxiosRequestConfig } from "axios";
 
 export interface User {
     id: number;
@@ -14,27 +14,27 @@ export interface CreateUserDto {
 export class ExampleService {
     constructor(private apiClient: AxiosInstance) {}
 
-    getUsers = async () => {
-        const response = await this.apiClient.get<User[]>("/users");
-        return response.data;
+    getUsers = async (config?: AxiosRequestConfig) => {
+        return (await this.apiClient.get<User[]>("/users", config)).data;
     };
 
-    getUserById = async (id: number) => {
-        const response = await this.apiClient.get<User>(`/users/${id}`);
-        return response.data;
+    getUserById = async (id: number, config?: AxiosRequestConfig) => {
+        return (await this.apiClient.get<User>(`/users/${id}`, config)).data;
     };
 
-    createUser = async (data: CreateUserDto) => {
-        const response = await this.apiClient.post<User>("/users", data);
-        return response.data;
+    createUser = async (data: CreateUserDto, config?: AxiosRequestConfig) => {
+        return (await this.apiClient.post<User>("/users", data, config)).data;
     };
 
-    updateUser = async (id: number, data: Partial<CreateUserDto>) => {
-        const response = await this.apiClient.patch<User>(`/users/${id}`, data);
-        return response.data;
+    updateUser = async (
+        id: number,
+        data: Partial<CreateUserDto>,
+        config?: AxiosRequestConfig,
+    ) => {
+        return (await this.apiClient.patch<User>(`/users/${id}`, data, config)).data;
     };
 
-    deleteUser = async (id: number) => {
-        await this.apiClient.delete(`/users/${id}`);
+    deleteUser = async (id: number, config?: AxiosRequestConfig) => {
+        return this.apiClient.delete(`/users/${id}`, config);
     };
 }

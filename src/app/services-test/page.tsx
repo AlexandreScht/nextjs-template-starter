@@ -1,3 +1,4 @@
+import { ServiceEventPanel } from "@/components/services-test/ServiceEventPanel";
 import { UsersForm } from "@/components/services-test/UsersForm";
 import { UsersList } from "@/components/services-test/UsersList";
 
@@ -31,6 +32,8 @@ export default function ServicesTestPage() {
           ))}
         </ol>
       </section>
+
+      <ServiceEventPanel />
 
       <section className="grid gap-6 md:grid-cols-2">
         <UsersForm />

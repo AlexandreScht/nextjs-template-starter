@@ -4,17 +4,20 @@ import {
     type UseQueryOptions,
     type UseQueryResult,
 } from "@tanstack/react-query";
+import type { AxiosRequestConfig } from "axios";
 import { useContext } from "react";
 import { ServiceContext } from "./providers/services";
 
 type Services = ReturnType<typeof useBaseService>;
 type Selector<T> = (services: Services) => T;
-type AsyncSelector<TResult> = (
+type AsyncSelector<TResult, TConfig = AxiosRequestConfig | undefined> = (
     services: Services,
+    requestConfig?: TConfig,
 ) => Promise<TResult> | TResult;
 
-type UseServiceQueryOptions<TResult> = {
+type UseServiceQueryOptions<TResult, TConfig> = {
     queryKey?: QueryKey;
+    requestConfig?: TConfig;
 } & Omit<UseQueryOptions<TResult>, "queryKey" | "queryFn">;
 
 function useBaseService() {
@@ -31,9 +34,9 @@ export function useServiceInstance<T>(selector: Selector<T>): T {
     return selector(services);
 }
 
-export function useService<TResult>(
-    selector: AsyncSelector<TResult>,
-    options?: UseServiceQueryOptions<TResult>,
+export function useService<TResult, TConfig = AxiosRequestConfig | undefined>(
+    selector: AsyncSelector<TResult, TConfig>,
+    options?: UseServiceQueryOptions<TResult, TConfig>,
 ): UseQueryResult<TResult> {
     const services = useBaseService();
 
@@ -45,6 +48,6 @@ export function useService<TResult>(
     return useQuery({
         ...options,
         queryKey,
-        queryFn: async () => selector(services),
+        queryFn: async () => selector(services, options?.requestConfig),
     });
 }

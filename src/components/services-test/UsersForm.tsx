@@ -28,11 +28,16 @@ export function UsersForm() {
     onMutate: async () => {
       setMutationCount((count) => count + 1);
     },
-    onSuccess: () => {
+    onSuccess: (created) => {
       setName("");
       setEmail("");
       setLastInvalidationAt(Date.now());
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+      //? invalider
+      // queryClient.invalidateQueries({ queryKey: ["users"] });
+      //? muter la value
+      queryClient.setQueryData(["users"], (existing?: User[]) =>
+        existing ? [...existing, created] : [created],
+      );
     },
   });
 
