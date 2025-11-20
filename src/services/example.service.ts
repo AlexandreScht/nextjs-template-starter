@@ -1,4 +1,4 @@
-import type { AxiosInstance, AxiosRequestConfig } from "axios";
+import type { ApiClient, ApiRequestConfig } from "@/interfaces/apiClient";
 
 export interface User {
     id: number;
@@ -12,29 +12,34 @@ export interface CreateUserDto {
 }
 
 export class ExampleService {
-    constructor(private apiClient: AxiosInstance) {}
+    constructor(private apiClient: ApiClient) {}
 
-    getUsers = async (config?: AxiosRequestConfig) => {
-        return (await this.apiClient.get<User[]>("/users", config)).data;
+    getUsers = async () => {
+        return (await this.apiClient.get<User[]>("/users")).data;
     };
 
-    getUserById = async (id: number, config?: AxiosRequestConfig) => {
+    getUsersWithCacheProof = async () => {
+        return (
+            await this.apiClient.get<{ generatedAt: number }>(
+                "/users/cache-proof",
+            )
+        ).data;
+    };
+
+    getUserById = async (id: number, config?: ApiRequestConfig) => {
+        //? permet de crée une logique pour mettre les config axios voulut en rapport avec config
         return (await this.apiClient.get<User>(`/users/${id}`, config)).data;
     };
 
-    createUser = async (data: CreateUserDto, config?: AxiosRequestConfig) => {
-        return (await this.apiClient.post<User>("/users", data, config)).data;
+    createUser = async (data: CreateUserDto) => {
+        return (await this.apiClient.post<User>("/users", data)).data;
     };
 
-    updateUser = async (
-        id: number,
-        data: Partial<CreateUserDto>,
-        config?: AxiosRequestConfig,
-    ) => {
-        return (await this.apiClient.patch<User>(`/users/${id}`, data, config)).data;
+    updateUser = async (id: number, data: Partial<CreateUserDto>) => {
+        return (await this.apiClient.patch<User>(`/users/${id}`, data)).data;
     };
 
-    deleteUser = async (id: number, config?: AxiosRequestConfig) => {
-        return this.apiClient.delete(`/users/${id}`, config);
+    deleteUser = async (id: number) => {
+        return this.apiClient.delete(`/users/${id}`);
     };
 }

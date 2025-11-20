@@ -23,7 +23,9 @@ export function ServiceEventPanel() {
         <p className="text-sm font-medium text-gray-600">Requêtes réseau</p>
         <span
           className={`rounded-full px-3 py-1 text-xs font-semibold ${
-            isLoading ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
+            isLoading
+              ? "bg-amber-100 text-amber-700"
+              : "bg-emerald-100 text-emerald-700"
           }`}
         >
           {isLoading ? "En cours" : "Au repos"}
@@ -35,7 +37,9 @@ export function ServiceEventPanel() {
           {durationText}
         </p>
         <p>
-          <span className="font-semibold text-gray-800">Dernier message : </span>
+          <span className="font-semibold text-gray-800">
+            Dernier message :{" "}
+          </span>
           {notificationText}
         </p>
       </div>

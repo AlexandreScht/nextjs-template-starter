@@ -7,7 +7,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-    await wait();
+    await wait(500);
     const payload = await request.json();
 
     const newUser = {

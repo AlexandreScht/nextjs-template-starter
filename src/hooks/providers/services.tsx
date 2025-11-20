@@ -49,12 +49,10 @@ export function ServicesProvider({
 }: ServicesProviderProps) {
   const [queryClient] = useState(() => new QueryClient(serviceCache.client));
   const [isLoading, setIsLoading] = useState(false);
-  const [lastDuration, setLastDuration] = useState<ServiceEventState["lastDuration"]>(
-    null,
-  );
-  const [lastNotification, setLastNotification] = useState<ServiceNotification | null>(
-    null,
-  );
+  const [lastDuration, setLastDuration] =
+    useState<ServiceEventState["lastDuration"]>(null);
+  const [lastNotification, setLastNotification] =
+    useState<ServiceNotification | null>(null);
 
   const apiClient = useMemo(() => createApiClient(apiConfig), [apiConfig]);
   const services = useMemo(() => createServices(apiClient), [apiClient]);
@@ -75,7 +73,8 @@ export function ServicesProvider({
     const handleLoadingStart = () => setIsLoading(true);
     const handleLoadingStop = () => setIsLoading(false);
     const handleDuration = (event: Event) => {
-      const detail = (event as CustomEvent<ServiceEventState["lastDuration"]>).detail;
+      const detail = (event as CustomEvent<ServiceEventState["lastDuration"]>)
+        .detail;
       if (detail) {
         setLastDuration(detail);
       }
@@ -89,14 +88,26 @@ export function ServicesProvider({
 
     window.addEventListener("axios:loading-start", handleLoadingStart);
     window.addEventListener("axios:loading-stop", handleLoadingStop);
-    window.addEventListener("axios:request-duration", handleDuration as EventListener);
-    window.addEventListener("axios:notification", handleNotification as EventListener);
+    window.addEventListener(
+      "axios:request-duration",
+      handleDuration as EventListener,
+    );
+    window.addEventListener(
+      "axios:notification",
+      handleNotification as EventListener,
+    );
 
     return () => {
       window.removeEventListener("axios:loading-start", handleLoadingStart);
       window.removeEventListener("axios:loading-stop", handleLoadingStop);
-      window.removeEventListener("axios:request-duration", handleDuration as EventListener);
-      window.removeEventListener("axios:notification", handleNotification as EventListener);
+      window.removeEventListener(
+        "axios:request-duration",
+        handleDuration as EventListener,
+      );
+      window.removeEventListener(
+        "axios:notification",
+        handleNotification as EventListener,
+      );
     };
   }, []);
 
@@ -112,7 +123,9 @@ export function ServicesProvider({
   return (
     <ServiceContext.Provider value={value}>
       <ServiceEventContext.Provider value={eventValue}>
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
       </ServiceEventContext.Provider>
     </ServiceContext.Provider>
   );

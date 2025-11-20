@@ -1,11 +1,11 @@
-import type { AxiosInstance } from "axios";
+import type { ApiClient } from "@/interfaces/apiClient";
 import { ExampleService } from "./example.service";
 
-export const createServices = (apiClient: AxiosInstance) => {
+export const createServices = (apiClient: ApiClient) => {
     return {
         client: apiClient,
         users: new ExampleService(apiClient),
-    } as const;
+    };
 };
 
 export type Services = ReturnType<typeof createServices>;

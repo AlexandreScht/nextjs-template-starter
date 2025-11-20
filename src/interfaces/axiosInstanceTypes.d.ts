@@ -14,5 +14,7 @@ export interface AxiosRequestConfigWithMeta extends InternalAxiosRequestConfig {
     requestProps?: RequestProps;
 }
 
-export type ApiClientConfig = Omit<AxiosRequestConfig, "method" | "data" | "params">;
-
+export type ApiClientConfig = Omit<
+    AxiosRequestConfig,
+    "method" | "data" | "params"
+>;

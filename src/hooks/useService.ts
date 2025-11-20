@@ -1,14 +1,14 @@
+import type { Services } from "@/services";
 import {
     useQuery,
     type QueryKey,
     type UseQueryOptions,
     type UseQueryResult,
 } from "@tanstack/react-query";
-import type { AxiosRequestConfig } from "axios";
+import { type AxiosRequestConfig } from "axios";
 import { useContext } from "react";
 import { ServiceContext } from "./providers/services";
 
-type Services = ReturnType<typeof useBaseService>;
 type Selector<T> = (services: Services) => T;
 type AsyncSelector<TResult, TConfig = AxiosRequestConfig | undefined> = (
     services: Services,
