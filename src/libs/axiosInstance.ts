@@ -1,5 +1,4 @@
 import env from "@/config";
-import { axiosConfig } from "@/config/axiosConfig";
 import {
     ExpiredSessionError,
     InvalidArgumentError,
@@ -9,16 +8,12 @@ import type {
     ApiClientConfig,
     AxiosRequestConfigWithMeta,
 } from "@/interfaces/axiosInstanceTypes";
+import { apiRoutes } from "@/router/api";
 import {
-    attachClientTokens,
     attachContextHeaders,
     beginRequestTracking,
-    clearStoredTokens,
-    ensureHeaders,
     finalizeRequestTracking,
-    getRefreshToken,
     notifyClient,
-    setAccessToken,
 } from "@/utils/axiosFeatures";
 import axios, { type AxiosInstance, type AxiosResponse } from "axios";
 
@@ -33,14 +28,16 @@ export function createApiClient(config?: ApiClientConfig): AxiosInstance {
         maxRedirects,
         ...options
     } = config || {};
+
     const resolvedValidateStatus =
         typeof validateStatus === "function"
             ? validateStatus
             : (status: number) => status >= 200 && status < 300;
+
     const instance = axios.create({
         baseURL: baseURL || env.NEXT_PUBLIC_API_URL || "/api",
         timeout: timeout || 30000,
-        withCredentials: withCredentials ?? true,
+        withCredentials: true, 
         ...(withCredentials !== false
             ? { xsrfCookieName: "XSRF-TOKEN", xsrfHeaderName: "X-XSRF-TOKEN" }
             : {}),
@@ -53,9 +50,9 @@ export function createApiClient(config?: ApiClientConfig): AxiosInstance {
     instance.interceptors.request.use(
         (config) => {
             const typedConfig = config as AxiosRequestConfigWithMeta;
-            attachClientTokens(typedConfig);
             attachContextHeaders(typedConfig);
             beginRequestTracking(typedConfig, pendingRequestCount);
+            
             typedConfig.requestProps = {
                 data: typedConfig.data,
                 params: typedConfig.params,
@@ -94,7 +91,8 @@ export function createApiClient(config?: ApiClientConfig): AxiosInstance {
             finalizeRequestTracking(pendingRequestCount, originalRequest);
 
             const status = error.response?.status;
-            if (status && status >= 400 && status < 500) {
+            
+            if (status && status >= 400 && status < 500 && status !== 401) {
                 notifyClient(
                     error.response?.data?.message || "Une erreur est survenue",
                     "error",
@@ -102,28 +100,13 @@ export function createApiClient(config?: ApiClientConfig): AxiosInstance {
             }
 
             if (status === 401 && originalRequest && !originalRequest._retry) {
-                const refreshToken = getRefreshToken();
-                if (refreshToken) {
-                    originalRequest._retry = true;
-                    try {
-                        const newAccessToken = await refreshAccessToken(
-                            refreshToken,
-                            instance.defaults.baseURL,
-                        );
-                        if (newAccessToken) {
-                            setAccessToken(newAccessToken);
-                            originalRequest.headers = ensureHeaders(
-                                originalRequest.headers,
-                            );
-                            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-                            return instance(originalRequest);
-                        }
-                    } catch {
-                        notifyClient(
-                            "Session expirée, veuillez vous reconnecter.",
-                        );
-                        clearStoredTokens();
-                    }
+                originalRequest._retry = true;
+                
+                try {
+                    await instance.post(apiRoutes.REFRESH_ENDPOINT);
+                    return instance(originalRequest);
+                } catch (refreshError) {
+                    notifyClient("Session expirée, veuillez vous reconnecter.");
                 }
             }
 
@@ -133,15 +116,6 @@ export function createApiClient(config?: ApiClientConfig): AxiosInstance {
     );
 
     return instance;
-}
-
-async function refreshAccessToken(refreshToken: string, baseURL?: string) {
-    const { data } = await axios.post<{ accessToken?: string }>(
-        axiosConfig.REFRESH_ENDPOINT,
-        { refreshToken },
-        { baseURL },
-    );
-    return data.accessToken;
 }
 
 function prepareAxiosError(err: any) {

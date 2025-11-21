@@ -7,10 +7,7 @@ import type {
     FetchRequestOptions,
 } from "@/interfaces/apiClient";
 import { AxiosHeaders } from "axios";
-
-// ----------------------------------------------------------------------
-// Factory
-// ----------------------------------------------------------------------
+import { cookies } from "next/headers";
 
 export function createFetchInstance(
     defaultConfig: FetchRequestOptions = {},
@@ -18,10 +15,8 @@ export function createFetchInstance(
     async function request<TResponse = unknown, TBody = unknown>(
         config: ApiRequestConfig<TBody>,
     ): Promise<ApiResponse<TResponse, TBody>> {
-        // Cast pour l'environnement SSR/Fetch
         const fetchConfig = config as FetchRequestOptions;
 
-        // 1. Fusion de la configuration
         const mergedConfig = { ...defaultConfig, ...fetchConfig };
         const {
             baseURL,
@@ -30,23 +25,16 @@ export function createFetchInstance(
             data,
             method,
             headers: configHeaders,
-            // On exclut mode et referrerPolicy ici pour les gérer manuellement plus bas
             mode: overrideMode,
             referrerPolicy: overrideReferrer,
             ...restFetchOptions
         } = mergedConfig as any;
 
-        // 2. Construction de l'URL
         const finalBaseURL = baseURL || env.NEXT_PUBLIC_API_URL || "/api";
 
         const resolvedUrl = resolveUrl(finalBaseURL, configUrl || "");
         const finalUrl = applyParamsToUrl(resolvedUrl, params);
 
-        // ---------------------------------------------------------
-        // NOUVEAU : Logique de Sécurité Automatique
-        // ---------------------------------------------------------
-
-        // Détermination du Mode (CORS / Same-Origin)
         let automaticMode: RequestMode = "same-origin";
         const targetOrigin = getUrlOrigin(finalUrl);
         const appOrigin = getUrlOrigin(finalBaseURL);
@@ -57,20 +45,35 @@ export function createFetchInstance(
             securityConfig.allowedCorsOrigins.includes(targetOrigin);
 
         if (isInternal) {
-            automaticMode = "same-origin"; // Sécurité maximale pour l'interne
-        } else if (isAllowedExternal) {
-            automaticMode = "cors"; // Autorisé explicitement
-        } else {
-            // Si c'est externe et non autorisé, on laisse 'same-origin'
-            // Ce qui fera échouer le fetch (ce qu'on veut pour bloquer les fuites)
             automaticMode = "same-origin";
-            console.warn(
-                `[FetchInstance] Appel bloqué vers origine non autorisée : ${targetOrigin}`,
-            );
+        } else if (isAllowedExternal) {
+            automaticMode = "cors";
+        } else {
+            automaticMode = "same-origin";
+            if (process.env.NODE_ENV === "development") {
+                console.warn(
+                    `[FetchInstance] Appel bloqué vers origine non autorisée : ${targetOrigin}`,
+                );
+            }
         }
 
-        // 3. Gestion des Headers
         const headers = new Headers(defaultConfig.headers);
+
+        try {
+            const cookieStore = await cookies();
+            const allCookies = cookieStore.toString();
+            if (allCookies) {
+                headers.set("Cookie", allCookies);
+            }
+        } catch (error) {
+            if (process.env.NODE_ENV === "development") {
+                console.warn(
+                    "[FetchInstance] Impossible d'injecter les cookies (contexte statique ou hors requête). La requête continue sans auth.",
+                    error instanceof Error ? error.message : error
+                );
+            }
+        }
+
         if (configHeaders) {
             if (typeof configHeaders.forEach === "function") {
                 configHeaders.forEach((v: string, k: string) =>
@@ -83,7 +86,6 @@ export function createFetchInstance(
             }
         }
 
-        // Gestion automatique du Content-Type (JSON)
         const payload = data ?? (fetchConfig as any).body;
         const serializedBody = serializeBody(payload);
         if (
@@ -95,30 +97,24 @@ export function createFetchInstance(
                 JSON.parse(serializedBody);
                 headers.set("Content-Type", "application/json");
             } catch {
-                // Ignore
             }
         }
 
-        // 4. Construction de l'init pour fetch
         const init: RequestInit & { next?: any } = {
             ...restFetchOptions,
             method: method || "GET",
             headers,
             body: serializedBody,
-            // Application des sécurités (sauf si surchargé explicitement dans l'appel)
             mode: overrideMode ?? automaticMode,
             referrerPolicy: overrideReferrer ?? securityConfig.referrerPolicy,
         };
 
-        // 5. Exécution du Fetch
         const response = await fetch(finalUrl, init);
 
-        // 6. Gestion des erreurs
         if (!response.ok) {
             throw await buildFetchError(response, mergedConfig);
         }
 
-        // 7. Parsing
         const responseData = await parseResponseData(response);
 
         return {
@@ -144,16 +140,9 @@ export function createFetchInstance(
     };
 }
 
-// ----------------------------------------------------------------------
-// Helpers
-// ----------------------------------------------------------------------
-
 function getUrlOrigin(url: string): string | null {
     try {
-        // Si l'url est relative (ex: "/api/users"), new URL() throw sauf si on met une base
-        // On utilise une base dummy juste pour parser
         const urlObj = new URL(url, "http://dummy-base");
-        // Si c'était relatif, l'origine sera "http://dummy-base", on considère ça comme null (interne)
         if (urlObj.origin === "http://dummy-base") return null;
         return urlObj.origin;
     } catch {

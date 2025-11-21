@@ -1,7 +1,7 @@
-import { axiosConfig } from "@/config/axiosConfig";
-import type { AxiosRequestConfigWithMeta } from "@/interfaces/axiosInstanceTypes";
 import { AxiosHeaders } from "axios";
 import { isBrowser } from "./commun";
+import type { AxiosRequestConfigWithMeta } from "@/interfaces/axiosInstanceTypes";
+
 
 export function ensureHeaders(headers?: AxiosRequestConfigWithMeta["headers"]) {
     if (headers instanceof AxiosHeaders) {
@@ -10,31 +10,6 @@ export function ensureHeaders(headers?: AxiosRequestConfigWithMeta["headers"]) {
     return AxiosHeaders.from(headers ?? {});
 }
 
-function getStoredToken(key: string) {
-    if (!isBrowser()) return null;
-    try {
-        return localStorage.getItem(key);
-    } catch {
-        return null;
-    }
-}
-
-//? get the refresh token
-export function getRefreshToken() {
-    return getStoredToken(axiosConfig.TOKEN_KEYS.refresh);
-}
-
-//? attach the access token to the request
-export function attachClientTokens(config: AxiosRequestConfigWithMeta) {
-    if (!isBrowser()) return;
-    config.headers = ensureHeaders(config.headers);
-    const accessToken = getStoredToken(axiosConfig.TOKEN_KEYS.access);
-    if (accessToken) {
-        config.headers.Authorization = `Bearer ${accessToken}`;
-    }
-}
-
-//? recup the language and the app version
 export function attachContextHeaders(config: AxiosRequestConfigWithMeta) {
     if (!isBrowser()) return;
     config.headers = ensureHeaders(config.headers);
@@ -44,7 +19,7 @@ export function attachContextHeaders(config: AxiosRequestConfigWithMeta) {
     config.headers["X-App-Version"] = appVersion;
 }
 
-//? track the request
+
 export function beginRequestTracking(
     config: AxiosRequestConfigWithMeta,
     pendingRequestCount: number,
@@ -87,7 +62,6 @@ export function finalizeRequestTracking(
     return nextCount;
 }
 
-//? notify the client
 export function notifyClient(message: string, type: "error" | "success" = "error") {
     if (!isBrowser()) return;
     window.dispatchEvent(
@@ -95,23 +69,4 @@ export function notifyClient(message: string, type: "error" | "success" = "error
             detail: { message, type },
         }),
     );
-}
-
-//? set the access token
-export function setAccessToken(token: string) {
-    if (!isBrowser()) return;
-    try {
-        localStorage.setItem(axiosConfig.TOKEN_KEYS.access, token);
-    } catch {
-        notifyClient("Impossible de stocker votre session. Vérifiez les permissions de stockage du navigateur puis reconnectez-vous.");
-    }
-}
-
-//? clear the stored tokens
-export function clearStoredTokens() {
-    if (!isBrowser()) return;
-    try {
-        localStorage.removeItem(axiosConfig.TOKEN_KEYS.access);
-        localStorage.removeItem(axiosConfig.TOKEN_KEYS.refresh);
-    } catch {}
 }

@@ -15,8 +15,8 @@ export type NextFetchRequestConfigLike = {
 
 export type FetchRequestOptions = fetchOptions & {
     next?: NextFetchRequestConfig;
-    params?: Record<string, any>; // Ajout maison pour supporter les query params
-    baseURL?: string; // Ajout maison pour supporter l'URL de base
+    params?: Record<string, any>; 
+    baseURL?: string; 
 };
 // --- Configuration Union (Client | Server) ---
 
