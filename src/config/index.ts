@@ -7,7 +7,7 @@ const env = cleanEnv(process.env, {
     }),
     PORT: port({ default: 3000 }),
     NEXT_PUBLIC_API_URL: str({
-        default: "http://localhost:3000/api",
+        default: "http://localhost:3000",
     }),
 });
 

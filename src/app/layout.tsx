@@ -1,4 +1,4 @@
-import { ServicesProvider } from "@/hooks/providers/services";
+import { ServicesProvider } from "@/hooks/providers/servicesProvider";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";

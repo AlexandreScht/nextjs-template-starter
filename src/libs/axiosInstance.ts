@@ -7,8 +7,8 @@ import {
 import type {
     ApiClientConfig,
     AxiosRequestConfigWithMeta,
-} from "@/interfaces/axiosInstanceTypes";
-import { apiRoutes } from "@/router/api";
+} from "@/interfaces/instances";
+import apiRoutes from "@/router/api";
 import {
     attachContextHeaders,
     beginRequestTracking,
@@ -35,9 +35,9 @@ export function createApiClient(config?: ApiClientConfig): AxiosInstance {
             : (status: number) => status >= 200 && status < 300;
 
     const instance = axios.create({
-        baseURL: baseURL || env.NEXT_PUBLIC_API_URL || "/api",
+        baseURL: baseURL || env.NEXT_PUBLIC_API_URL,
         timeout: timeout || 30000,
-        withCredentials: true, 
+        withCredentials: true,
         ...(withCredentials !== false
             ? { xsrfCookieName: "XSRF-TOKEN", xsrfHeaderName: "X-XSRF-TOKEN" }
             : {}),
@@ -52,7 +52,7 @@ export function createApiClient(config?: ApiClientConfig): AxiosInstance {
             const typedConfig = config as AxiosRequestConfigWithMeta;
             attachContextHeaders(typedConfig);
             beginRequestTracking(typedConfig, pendingRequestCount);
-            
+
             typedConfig.requestProps = {
                 data: typedConfig.data,
                 params: typedConfig.params,
@@ -91,7 +91,7 @@ export function createApiClient(config?: ApiClientConfig): AxiosInstance {
             finalizeRequestTracking(pendingRequestCount, originalRequest);
 
             const status = error.response?.status;
-            
+
             if (status && status >= 400 && status < 500 && status !== 401) {
                 notifyClient(
                     error.response?.data?.message || "Une erreur est survenue",
@@ -101,11 +101,11 @@ export function createApiClient(config?: ApiClientConfig): AxiosInstance {
 
             if (status === 401 && originalRequest && !originalRequest._retry) {
                 originalRequest._retry = true;
-                
+
                 try {
-                    await instance.post(apiRoutes.REFRESH_ENDPOINT);
+                    await instance.post(apiRoutes.api.refresh_endpoint());
                     return instance(originalRequest);
-                } catch (refreshError) {
+                } catch {
                     notifyClient("Session expirée, veuillez vous reconnecter.");
                 }
             }

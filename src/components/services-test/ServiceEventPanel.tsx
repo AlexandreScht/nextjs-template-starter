@@ -1,10 +1,10 @@
 "use client";
 
-import { useServiceEvent } from "@/hooks/useServiceEvent";
+import { useServicesEvent } from "@/hooks/useServicesEvent";
 import { useMemo } from "react";
 
 export function ServiceEventPanel() {
-  const { isLoading, lastDuration, lastNotification } = useServiceEvent();
+  const { isLoading, lastDuration, lastNotification } = useServicesEvent();
 
   const durationText = useMemo(() => {
     if (!lastDuration) return "—";

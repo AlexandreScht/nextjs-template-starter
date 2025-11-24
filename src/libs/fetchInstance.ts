@@ -1,5 +1,5 @@
 import env from "@/config";
-import { securityConfig } from "@/config/services";
+import { serviceConfig } from "@/config/services";
 import type {
     ApiClient,
     ApiRequestConfig,
@@ -30,7 +30,7 @@ export function createFetchInstance(
             ...restFetchOptions
         } = mergedConfig as any;
 
-        const finalBaseURL = baseURL || env.NEXT_PUBLIC_API_URL || "/api";
+        const finalBaseURL = baseURL || env.NEXT_PUBLIC_API_URL;
 
         const resolvedUrl = resolveUrl(finalBaseURL, configUrl || "");
         const finalUrl = applyParamsToUrl(resolvedUrl, params);
@@ -42,7 +42,7 @@ export function createFetchInstance(
         const isInternal = !targetOrigin || targetOrigin === appOrigin;
         const isAllowedExternal =
             targetOrigin &&
-            securityConfig.allowedCorsOrigins.includes(targetOrigin);
+            serviceConfig.server.allowedCorsOrigins.includes(targetOrigin);
 
         if (isInternal) {
             automaticMode = "same-origin";
@@ -69,7 +69,7 @@ export function createFetchInstance(
             if (process.env.NODE_ENV === "development") {
                 console.warn(
                     "[FetchInstance] Impossible d'injecter les cookies (contexte statique ou hors requête). La requête continue sans auth.",
-                    error instanceof Error ? error.message : error
+                    error instanceof Error ? error.message : error,
                 );
             }
         }
@@ -96,8 +96,7 @@ export function createFetchInstance(
             try {
                 JSON.parse(serializedBody);
                 headers.set("Content-Type", "application/json");
-            } catch {
-            }
+            } catch {}
         }
 
         const init: RequestInit & { next?: any } = {
@@ -106,7 +105,8 @@ export function createFetchInstance(
             headers,
             body: serializedBody,
             mode: overrideMode ?? automaticMode,
-            referrerPolicy: overrideReferrer ?? securityConfig.referrerPolicy,
+            referrerPolicy:
+                overrideReferrer ?? serviceConfig.server.referrerPolicy,
         };
 
         const response = await fetch(finalUrl, init);

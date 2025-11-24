@@ -1,44 +1,43 @@
 import type { ApiClient, ApiRequestConfig } from "@/interfaces/apiClient";
+import type { CreateUserDto, User } from "@/interfaces/models/users";
 import { apiClientPortal } from "@/libs/apiClientPortal";
-import { validate } from "@/middlewares/validator.middleware";
-import { CreateUserSchema, UpdateUserSchema, UserSchema } from "@/validators/user.schema";
-// import { Guard } from "@/middlewares/auth.guard"; // Décommenter si besoin
-
-export interface User {
-    id: number;
-    name: string;
-    email: string;
-}
-
-export interface CreateUserDto {
-    name: string;
-    email: string;
-}
+import { validate } from "@/middlewares/validator";
+import apiRoutes from "@/router/api";
+import {
+    CreateUserSchema,
+    UpdateUserSchema,
+    UserSchema,
+} from "@/validators/user.schema";
 
 export class ExampleService {
+    private router = apiRoutes.api.users;
     constructor(private apiClient: ApiClient) {}
 
     async getUsers() {
-        return (await this.apiClient.get<User[]>("/users")).data;
+        return (await this.apiClient.get<User[]>(this.router.list())).data;
     }
 
     async getUsersWithCacheProof() {
         return (
             await this.apiClient.get<{ generatedAt: number }>(
-                "/users/cache-proof",
+                this.router.cacheProof(),
             )
         ).data;
     }
 
     async getUserById(id: number, config?: ApiRequestConfig) {
         return await apiClientPortal({
-            payload: id,
-            inputValidator: (d) => validate(UserSchema, d),
-            request: this.apiClient.get<User>(`/users/${id}`, config),
+            rateLimitConfig: { maxRequests: 20 },
+            requestValidator: () => validate(UserSchema, { id }),
+            request: (v) =>
+                this.apiClient.get<User>(this.router.getById(v.id), config),
             responseValidator: (data) => validate(UserSchema, data),
             onSuccess: (data) => data,
             onError: (error) => {
-                console.error("Erreur lors de la récupération de l'utilisateur", error);
+                console.error(
+                    "Erreur lors de la récupération de l'utilisateur",
+                    error,
+                );
                 throw error;
             },
         });
@@ -46,29 +45,29 @@ export class ExampleService {
 
     async createUser(data: CreateUserDto) {
         return await apiClientPortal({
-            payload: data,
-            inputValidator: (d) => validate(CreateUserSchema, d),
-            request: (validData) => this.apiClient.post<User>("/users", validData),
+            requestValidator: () => validate(CreateUserSchema, data),
+            request: (validData) =>
+                this.apiClient.post<User>(this.router.create(), validData),
             responseValidator: (d) => validate(UserSchema, d),
             onSuccess: (user) => user,
             onError: (error) => {
                 console.error("Erreur création user", error);
                 throw error;
-            }
+            },
         });
     }
 
     async updateUser(id: number, data: Partial<CreateUserDto>) {
         return await apiClientPortal({
-            payload: data,
-            inputValidator: (d) => validate(UpdateUserSchema, d),
-            request: (validData) => this.apiClient.patch<User>(`/users/${id}`, validData),
+            requestValidator: () => validate(UpdateUserSchema, data),
+            request: (validData) =>
+                this.apiClient.patch<User>(this.router.getById(id), validData),
             responseValidator: (d) => validate(UserSchema, d),
             onSuccess: (user) => user,
         });
     }
 
     async deleteUser(id: number) {
-        return this.apiClient.delete(`/users/${id}`);
+        return this.apiClient.delete(this.router.delete(id));
     }
 }

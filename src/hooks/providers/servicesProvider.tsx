@@ -1,10 +1,8 @@
 "use client";
 
-import { serviceCache } from "@/config/serviceCache";
-import { type ApiClientConfig } from "@/interfaces/axiosInstanceTypes";
+import { type ApiClientConfig } from "@/interfaces/instances";
 import { createApiClient } from "@/libs/axiosInstance";
 import { createServices, type Services } from "@/services";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { AxiosInstance } from "axios";
 import {
   createContext,
@@ -13,6 +11,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import QueryProvider from "./QueryProvider";
 
 interface ServiceContextValue {
   apiClient: AxiosInstance;
@@ -47,7 +46,6 @@ export function ServicesProvider({
   children,
   apiConfig,
 }: ServicesProviderProps) {
-  const [queryClient] = useState(() => new QueryClient(serviceCache.client));
   const [isLoading, setIsLoading] = useState(false);
   const [lastDuration, setLastDuration] =
     useState<ServiceEventState["lastDuration"]>(null);
@@ -123,9 +121,7 @@ export function ServicesProvider({
   return (
     <ServiceContext.Provider value={value}>
       <ServiceEventContext.Provider value={eventValue}>
-        <QueryClientProvider client={queryClient}>
-          {children}
-        </QueryClientProvider>
+        <QueryProvider>{children}</QueryProvider>
       </ServiceEventContext.Provider>
     </ServiceContext.Provider>
   );

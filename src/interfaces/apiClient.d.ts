@@ -15,8 +15,8 @@ export type NextFetchRequestConfigLike = {
 
 export type FetchRequestOptions = fetchOptions & {
     next?: NextFetchRequestConfig;
-    params?: Record<string, any>; 
-    baseURL?: string; 
+    params?: Record<string, any>;
+    baseURL?: string;
 };
 // --- Configuration Union (Client | Server) ---
 

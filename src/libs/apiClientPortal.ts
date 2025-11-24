@@ -1,62 +1,51 @@
-import { ApiResponse } from "@/interfaces/apiClient";
+import { createRateLimiter, defaultRateLimiter } from "@/middlewares/rateLimit";
 
-type RequestExecutor<TInput, TResponse> = (data: TInput) => Promise<ApiResponse<TResponse>>;
-
-interface PortalOptions<TInput, TResponse, TReturn> {
-    // Validation d'entrée (Optionnelle)
-    payload?: TInput;
-    inputValidator?: (data: unknown) => TInput;
-
-    // Exécution de la requête (Promise directe ou Fonction qui reçoit le payload validé)
-    request: Promise<ApiResponse<TResponse>> | RequestExecutor<TInput, TResponse>;
-
-    // Validation de sortie (Optionnelle)
-    responseValidator?: (data: unknown) => TResponse;
-
-    // Callbacks
-    onSuccess?: (data: TResponse) => TReturn;
-    onError?: (error: unknown) => TReturn;
-}
+import type { PortalOptions } from "@/interfaces/apiClientPortal";
 
 /**
  * Wrapper unifié pour les appels API.
- * Gère le cycle complet : Validation Input -> Requête -> Validation Output -> Succès/Erreur.
+ * Gère le cycle complet : Rate Limit -> Validation Input -> Requête -> Validation Output -> Succès/Erreur.
  */
-export async function apiClientPortal<TInput = any, TResponse = any, TReturn = TResponse>(
-    options: PortalOptions<TInput, TResponse, TReturn>
+export async function apiClientPortal<
+    TInput = void,
+    TResponse = any,
+    TValidated = TResponse,
+    TReturn = TValidated,
+>(
+    options: PortalOptions<TInput, TResponse, TValidated, TReturn>,
 ): Promise<TReturn> {
     try {
-        let requestPayload = options.payload;
+        // Étape 0 : Rate Limiting
+        const limiter = options.rateLimitConfig
+            ? createRateLimiter(options.rateLimitConfig)
+            : defaultRateLimiter;
+
+        await limiter.consume();
+
+        let requestPayload: TInput;
 
         // Étape 1 : Validation de l'Input (si nécessaire)
-        if (options.inputValidator && requestPayload !== undefined) {
-            requestPayload = options.inputValidator(requestPayload);
+        if (options.requestValidator) {
+            requestPayload = options.requestValidator();
+        } else {
+            requestPayload = undefined as unknown as TInput;
         }
 
         // Étape 2 : Exécution de la requête
-        let response: ApiResponse<TResponse>;
-        
-        if (typeof options.request === "function") {
-            // Cas où request est une fonction : on lui passe le payload validé
-            response = await options.request(requestPayload as TInput);
-        } else {
-            // Cas où request est déjà une Promise
-            response = await options.request;
-        }
-
-        let responseData = response.data;
+        const response = await options.request(requestPayload);
+        let responseData: unknown = response.data;
 
         // Étape 3 : Validation / Transformation de la réponse
         if (options.responseValidator) {
-            responseData = options.responseValidator(responseData);
+            responseData = options.responseValidator(response.data);
         }
 
         // Étape 4 : Callback succès
         if (options.onSuccess) {
-            return options.onSuccess(responseData);
+            return options.onSuccess(responseData as TValidated);
         }
 
-        return responseData as unknown as TReturn;
+        return responseData as TReturn;
     } catch (error) {
         // Étape 5 : Gestion d'erreur
         if (options.onError) {

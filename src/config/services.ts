@@ -1,12 +1,27 @@
-export const securityConfig = {
-    // Politique de Referrer par défaut (Standard moderne de sécurité)
-    referrerPolicy: "strict-origin-when-cross-origin" as ReferrerPolicy,
+import { type QueryClientConfig } from "@tanstack/react-query";
 
-    // Liste des domaines externes autorisés pour le SSR
-    // Si une URL n'est pas ici et n'est pas interne, la requête sera bloquée (mode: 'same-origin')
-    allowedCorsOrigins: [
-        "https://api.stripe.com",
-        "https://auth.monservice.com",
-        // Ajoutez vos services tiers ici
-    ],
+export const serviceConfig = {
+    client: {
+        defaultOptions: {
+            queries: {
+                staleTime: 60 * 1000,
+                refetchOnWindowFocus: false,
+                retry: 1,
+            },
+        },
+    },
+    server: {
+        allowedCorsOrigins: [
+            "https://api.stripe.com",
+            "https://auth.monservice.com",
+            // Ajoutez vos services tiers ici
+        ],
+        referrerPolicy: "strict-origin-when-cross-origin",
+    },
+} satisfies {
+    client: QueryClientConfig;
+    server: {
+        allowedCorsOrigins: string[];
+        referrerPolicy: ReferrerPolicy;
+    };
 };

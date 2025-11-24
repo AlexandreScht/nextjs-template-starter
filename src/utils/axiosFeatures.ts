@@ -1,7 +1,6 @@
+import type { AxiosRequestConfigWithMeta } from "@/interfaces/instances";
+import { isServer } from "@tanstack/react-query";
 import { AxiosHeaders } from "axios";
-import { isBrowser } from "./commun";
-import type { AxiosRequestConfigWithMeta } from "@/interfaces/axiosInstanceTypes";
-
 
 export function ensureHeaders(headers?: AxiosRequestConfigWithMeta["headers"]) {
     if (headers instanceof AxiosHeaders) {
@@ -11,7 +10,7 @@ export function ensureHeaders(headers?: AxiosRequestConfigWithMeta["headers"]) {
 }
 
 export function attachContextHeaders(config: AxiosRequestConfigWithMeta) {
-    if (!isBrowser()) return;
+    if (isServer) return;
     config.headers = ensureHeaders(config.headers);
     const locale = navigator.language || "en";
     const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || "web";
@@ -19,12 +18,11 @@ export function attachContextHeaders(config: AxiosRequestConfigWithMeta) {
     config.headers["X-App-Version"] = appVersion;
 }
 
-
 export function beginRequestTracking(
     config: AxiosRequestConfigWithMeta,
     pendingRequestCount: number,
 ): number {
-    if (!isBrowser()) return pendingRequestCount;
+    if (isServer) return pendingRequestCount;
     if (!config.metadata) {
         config.metadata = {};
     }
@@ -42,7 +40,7 @@ export function finalizeRequestTracking(
     pendingRequestCount: number,
     config?: AxiosRequestConfigWithMeta,
 ): number {
-    if (!isBrowser()) return pendingRequestCount;
+    if (isServer) return pendingRequestCount;
     if (config?.metadata?.startTime && typeof performance !== "undefined") {
         const duration = performance.now() - config.metadata.startTime;
         const label = config?.url
@@ -62,8 +60,11 @@ export function finalizeRequestTracking(
     return nextCount;
 }
 
-export function notifyClient(message: string, type: "error" | "success" = "error") {
-    if (!isBrowser()) return;
+export function notifyClient(
+    message: string,
+    type: "error" | "success" = "error",
+) {
+    if (isServer) return;
     window.dispatchEvent(
         new CustomEvent("axios:notification", {
             detail: { message, type },
