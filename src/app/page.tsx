@@ -5,7 +5,7 @@ export default function Home() {
     { name: "UI Library (HeroUI / DaisyUI)", href: undefined },
     { name: "Theme", href: undefined },
     { name: "Server Cache", href: undefined },
-    { name: "Service", href: "/services-test" },
+    { name: "Service", href: "/selection" },
     { name: "Store", href: undefined },
   ];
 

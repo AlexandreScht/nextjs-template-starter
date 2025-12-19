@@ -18,11 +18,19 @@ export class ExampleService {
     }
 
     async getUsersWithCacheProof() {
-        return (
-            await this.apiClient.get<{ generatedAt: number }>(
-                this.router.cacheProof(),
-            )
-        ).data;
+        const [users, proof] = await Promise.all([
+            this.getUsers(),
+            (
+                await this.apiClient.get<{ generatedAt: number }>(
+                    this.router.cacheProof(),
+                )
+            ).data,
+        ]);
+
+        return {
+            users,
+            cacheProof: proof.generatedAt,
+        };
     }
 
     async getUserById(id: number, config?: ApiRequestConfig) {

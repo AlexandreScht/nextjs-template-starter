@@ -1,7 +1,7 @@
 "use client";
 
 import { useServiceInstance } from "@/hooks/useService";
-import { type CreateUserDto, type User } from "@/services/example.service";
+import type { CreateUserDto, User } from "@/interfaces/models/users";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
