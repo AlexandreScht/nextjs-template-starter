@@ -1,3 +1,4 @@
+import { ServicesProvider } from "@/hooks/providers/servicesProvider";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { UiLibraryProviders } from "../hooks/providers/ui_library";
@@ -28,7 +29,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <UiLibraryProviders>{children}</UiLibraryProviders>
+        <ServicesProvider>
+          <UiLibraryProviders>{children}</UiLibraryProviders>
+        </ServicesProvider>
       </body>
     </html>
   );
