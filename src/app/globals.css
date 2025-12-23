@@ -2,7 +2,7 @@
 @plugin "daisyui";
 @plugin '../styles/hero.ts';
 @source '../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
-@import "../styles/theme-colors.css";
+@import "../styles/uilibs_themes.css";
 @import "../styles/themes.css";
 
 :root {
