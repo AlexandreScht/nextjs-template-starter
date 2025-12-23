@@ -4,7 +4,7 @@ export default function Home() {
   const sections = [
     { name: "UI Library (HeroUI / DaisyUI)", href: "/uiLibrary" },
     { name: "Theme", href: undefined },
-    { name: "Server Cache", href: undefined },
+    { name: "Server Cache", href: "/server-cache" },
     { name: "Service", href: "/selection" },
     { name: "Store", href: undefined },
   ];
