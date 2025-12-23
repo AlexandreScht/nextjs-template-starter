@@ -1,4 +1,5 @@
 import { ServicesProvider } from "@/hooks/providers/servicesProvider";
+import { ThemesProvider } from "@/hooks/providers/themes";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { UiLibraryProviders } from "../hooks/providers/ui_library";
@@ -33,7 +34,9 @@ export default function RootLayout({
       >
         <SocketProvider>
           <ServicesProvider>
-            <UiLibraryProviders>{children}</UiLibraryProviders>
+            <ThemesProvider>
+              <UiLibraryProviders>{children}</UiLibraryProviders>
+            </ThemesProvider>
           </ServicesProvider>
         </SocketProvider>
       </body>
