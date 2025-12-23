@@ -6,7 +6,7 @@ export default function Home() {
     { name: "Theme", href: undefined },
     { name: "Server Cache", href: undefined },
     { name: "Service", href: undefined },
-    { name: "Store", href: undefined },
+    { name: "Store", href: "/store-demo" },
   ];
 
   return (
