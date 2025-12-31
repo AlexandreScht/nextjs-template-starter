@@ -33,15 +33,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-      <ServicesProvider>
-        <SocketProvider>
-          <StoreProvider>
-            <ThemesProvider>
-              <UiLibraryProviders>{children}</UiLibraryProviders>
-            </ThemesProvider>
-          </StoreProvider>
-          </SocketProvider>
-        </ServicesProvider>
+        <ThemesProvider>
+          <ServicesProvider>
+            <SocketProvider>
+              <StoreProvider>
+                <UiLibraryProviders>{children}</UiLibraryProviders>
+              </StoreProvider>
+            </SocketProvider>
+          </ServicesProvider>
+        </ThemesProvider>
       </body>
     </html>
   );
