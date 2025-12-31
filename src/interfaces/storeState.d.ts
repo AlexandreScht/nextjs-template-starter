@@ -1,10 +1,3 @@
-export type SetStoreState<T> = (
-    partial: T | Partial<T> | ((state: T) => T | Partial<T>),
-    replace?: boolean | undefined,
-) => void;
-
-export type GetStoreState<T> = () => T;
-
 export interface ExampleState {
     example: {
         score: number;

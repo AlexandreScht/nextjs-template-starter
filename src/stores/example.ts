@@ -1,20 +1,15 @@
-import { type ExampleState } from "@/interfaces/stores";
-import { type StateCreator } from "zustand";
+import { type SliceStore } from "@/interfaces/stores";
+import { type ExampleState } from "@/interfaces/storeState";
 
-const createExampleSlice: StateCreator<
-    ExampleState,
-    [["zustand/immer", never]],
-    [],
-    ExampleState
-> = (set) => ({
+const createExampleSlice: SliceStore<ExampleState> = (set) => ({
     example: {
         score: 0,
         increase: () =>
-            set((state) => {
+            set((state: ExampleState) => {
                 state.example.score += 1;
             }),
         resetScore: () =>
-            set((state) => {
+            set((state: ExampleState) => {
                 state.example.score = 0;
             }),
     },

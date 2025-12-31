@@ -4,8 +4,6 @@ import { useStore } from "@/hooks/providers/storeProvider";
 import { type FormEvent, useState } from "react";
 
 export default function StoreDemoPage() {
-  // Access the 'todos' slice from the store
-  // Because we used 'partialize: (state) => state', the whole state is available
   const { list, addTodo, removeTodo, toggleTodo } = useStore(
     (state) => state.todos,
   );
