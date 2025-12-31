@@ -1,4 +1,5 @@
 import { ServicesProvider } from "@/hooks/providers/servicesProvider";
+import { StoreProvider } from "@/hooks/providers/storeProvider";
 import { ThemesProvider } from "@/hooks/providers/themes";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -32,13 +33,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+      <ServicesProvider>
         <SocketProvider>
-          <ServicesProvider>
+          <StoreProvider>
             <ThemesProvider>
               <UiLibraryProviders>{children}</UiLibraryProviders>
             </ThemesProvider>
-          </ServicesProvider>
-        </SocketProvider>
+          </StoreProvider>
+          </SocketProvider>
+        </ServicesProvider>
       </body>
     </html>
   );
