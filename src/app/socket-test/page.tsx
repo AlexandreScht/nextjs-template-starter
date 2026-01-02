@@ -1,7 +1,7 @@
 "use client";
 
-import { EVENTS } from "@/libs/SocketEvents";
-import { useSocket } from "@/providers/SocketProvider";
+import { EVENT_SCHEMA } from "@/libs/SocketEvents";
+import { useSocket } from "@/hooks/providers/SocketProvider";
 import { useEffect, useState } from "react";
 
 export default function SocketTestPage() {
@@ -12,7 +12,7 @@ export default function SocketTestPage() {
   useEffect(() => {
     if (!socket) return;
 
-    const unsubscribe = subscribe(EVENTS.ON.RECEIVE_MESSAGE, (data) => {
+    const unsubscribe = subscribe(EVENT_SCHEMA.ON.RECEIVE_MESSAGE, (data) => {
       console.log("Received message:", data);
       setMessages((prev) => [...prev, data.message]);
     });

@@ -1,5 +1,5 @@
 import { type SliceStore } from "@/interfaces/stores";
-import { type ExampleState } from "@/interfaces/storeState";
+import { type ExampleState } from "@/interfaces/storeStates";
 
 const createExampleSlice: SliceStore<ExampleState> = (set) => ({
     example: {

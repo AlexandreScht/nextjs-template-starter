@@ -1,5 +1,5 @@
 import { type SliceStore } from "@/interfaces/stores";
-import { type TodoState } from "@/interfaces/storeState";
+import { type TodoState } from "@/interfaces/storeStates";
 
 const createTodoSlice: SliceStore<TodoState> = (set) => ({
     todos: {

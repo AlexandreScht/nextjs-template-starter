@@ -1,13 +1,15 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
-import { socketConfig } from "@/config/socket.config";
+import { socketConfig } from "@/config/socket";
 import {
   type SocketContextType,
   type SocketProviderProps,
-} from "@/interfaces/SocketContext";
-import type { SocketEventPayloads } from "@/interfaces/SocketTypes";
-import { type EVENTS } from "@/libs/SocketEvents";
+} from "@/interfaces/socketContext";
+import {
+  type EVENT_SCHEMA,
+  type SocketEventPayloads,
+} from "@/libs/SocketEvents";
 import React, {
   createContext,
   useContext,
@@ -82,11 +84,12 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     }
   }, [socket]);
 
-  const subscribe = <K extends (typeof EVENTS.ON)[keyof typeof EVENTS.ON]>(
+  const subscribe = <
+    K extends (typeof EVENT_SCHEMA.ON)[keyof typeof EVENT_SCHEMA.ON],
+  >(
     key: K,
     callback: (data: SocketEventPayloads[K]) => void,
   ) => {
-    // Cast callback to generic handler for storage/socket.io
     const genericCallback = callback as (data: unknown) => void;
     subscriptionsRef.current.push({ key, callback: genericCallback });
 
