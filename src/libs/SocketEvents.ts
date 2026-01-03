@@ -1,32 +1,22 @@
 import type { Socket } from "socket.io-client";
 
-export const EVENTS = {
-    EMIT: {
-        SEND_MESSAGE: "send_message",
-    },
-    ON: {
-        RECEIVE_MESSAGE: "receive_message",
-    },
-} as const;
+export class SocketEmitter {
+    constructor(private socket: Socket) {}
 
-export default class SocketEvents {
-    private socket: Socket | null = null;
+    public sendMessage(data: { message: string }) {
+        this.socket.emit("send_message", data);
+    }
+}
 
-    constructor(socket: Socket | null) {
-        this.socket = socket;
+export class SocketReceiver {
+    constructor(private socket: Socket) {}
+
+    private on<T>(event: string, callback: (data: T) => void) {
+        this.socket.on(event, callback);
+        return () => this.socket.off(event, callback);
     }
 
-    static readonly EVENTS = EVENTS;
-
-    public sendMessage(message: string) {
-        if (this.socket) {
-            this.socket.emit(EVENTS.EMIT.SEND_MESSAGE, { message });
-        }
-    }
-
-    public onMessage(callback: (data: unknown) => void) {
-        if (this.socket) {
-            this.socket.on(EVENTS.ON.RECEIVE_MESSAGE, callback);
-        }
+    public onReceiveMessage(callback: (data: { message: string }) => void) {
+        return this.on("receive_message", callback);
     }
 }

@@ -1,20 +1,21 @@
 "use client";
 
-import { EVENTS } from "@/libs/SocketEvents";
 import { useSocket } from "@/providers/SocketProvider";
 import { useEffect, useState } from "react";
 
 export default function SocketTestPage() {
-  const { socket, events, isConnected, subscribe } = useSocket();
+  const { socket, emitter, isConnected, subscribe } = useSocket();
   const [messages, setMessages] = useState<string[]>([]);
   const [inputMessage, setInputMessage] = useState("");
 
   useEffect(() => {
     if (!socket) return;
 
-    const unsubscribe = subscribe(EVENTS.ON.RECEIVE_MESSAGE, (data) => {
-      console.log("Received message:", data);
-      setMessages((prev) => [...prev, data.message]);
+    const unsubscribe = subscribe(({ onReceiveMessage }) => {
+      return onReceiveMessage((data) => {
+        console.log("Received message:", data);
+        setMessages((prev) => [...prev, data.message]);
+      });
     });
 
     return () => {
@@ -23,8 +24,8 @@ export default function SocketTestPage() {
   }, [socket, subscribe]);
 
   const handleSendMessage = () => {
-    if (events && inputMessage) {
-      events.sendMessage(inputMessage);
+    if (emitter && inputMessage) {
+      emitter.sendMessage({ message: inputMessage });
       setInputMessage("");
     }
   };

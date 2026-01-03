@@ -6,8 +6,7 @@ import {
   type SocketContextType,
   type SocketProviderProps,
 } from "@/interfaces/SocketContext";
-import type { SocketEventPayloads } from "@/interfaces/SocketTypes";
-import { type EVENTS } from "@/libs/SocketEvents";
+import { SocketEmitter, SocketReceiver } from "@/libs/SocketEvents";
 import React, {
   createContext,
   useContext,
@@ -17,11 +16,10 @@ import React, {
 } from "react";
 import { io, type Socket } from "socket.io-client";
 
-import SocketEvents from "@/libs/SocketEvents";
-
 const SocketContext = createContext<SocketContextType>({
   socket: null,
-  events: null,
+  emitter: null,
+  receiver: null,
   isConnected: false,
   subscribe: (() => () => {}) as any,
 });
@@ -32,11 +30,15 @@ export const useSocket = () => {
 
 export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
-  const [events, setEvents] = useState<SocketEvents | null>(null);
+  const [emitter, setEmitter] = useState<SocketEmitter | null>(null);
+  const [receiver, setReceiver] = useState<SocketReceiver | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
   const subscriptionsRef = useRef<
-    Array<{ key: string; callback: (data: unknown) => void }>
+    Array<{
+      setup: (receiver: SocketReceiver) => () => void;
+      cleanup: (() => void) | null;
+    }>
   >([]);
 
   useEffect(() => {
@@ -48,21 +50,25 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     socketInstance.on("connect", () => {
       console.log("Socket connected:", socketInstance.id);
       setIsConnected(true);
-      setEvents(new SocketEvents(socketInstance));
+      const newEmitter = new SocketEmitter(socketInstance);
+      const newReceiver = new SocketReceiver(socketInstance);
+      setEmitter(newEmitter);
+      setReceiver(newReceiver);
 
-      subscriptionsRef.current.forEach(({ key, callback }) => {
-        socketInstance.off(key, callback);
-        socketInstance.on(key, callback);
+      subscriptionsRef.current.forEach((sub) => {
+        if (sub.cleanup) sub.cleanup();
+        sub.cleanup = sub.setup(newReceiver);
       });
     });
 
     socketInstance.on("disconnect", () => {
       console.log("Socket disconnected");
       setIsConnected(false);
-      setEvents(null);
+      setEmitter(null);
+      setReceiver(null);
     });
 
-    socketInstance.on("connect_error", (err) => {
+    socketInstance.on("connect_error", (err: Error) => {
       console.error("Socket connection error:", err.message);
     });
 
@@ -74,38 +80,32 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    if (socket) {
-      subscriptionsRef.current.forEach(({ key, callback }) => {
-        socket.off(key, callback);
-        socket.on(key, callback);
+    return () => {
+      subscriptionsRef.current.forEach((sub) => {
+        if (sub.cleanup) sub.cleanup();
       });
-    }
-  }, [socket]);
+    };
+  }, []);
 
-  const subscribe = <K extends (typeof EVENTS.ON)[keyof typeof EVENTS.ON]>(
-    key: K,
-    callback: (data: SocketEventPayloads[K]) => void,
-  ) => {
-    // Cast callback to generic handler for storage/socket.io
-    const genericCallback = callback as (data: unknown) => void;
-    subscriptionsRef.current.push({ key, callback: genericCallback });
-
-    if (socket) {
-      socket.on(key, genericCallback as any);
-    }
+  const subscribe = (setup: (receiver: SocketReceiver) => () => void) => {
+    const subscription = {
+      setup,
+      cleanup: receiver ? setup(receiver) : null,
+    };
+    subscriptionsRef.current.push(subscription);
 
     return () => {
+      if (subscription.cleanup) subscription.cleanup();
       subscriptionsRef.current = subscriptionsRef.current.filter(
-        (sub) => sub.callback !== genericCallback || sub.key !== key,
+        (sub) => sub !== subscription,
       );
-      if (socket) {
-        socket.off(key, genericCallback as any);
-      }
     };
   };
 
   return (
-    <SocketContext.Provider value={{ socket, events, isConnected, subscribe }}>
+    <SocketContext.Provider
+      value={{ socket, emitter, receiver, isConnected, subscribe }}
+    >
       {children}
     </SocketContext.Provider>
   );
