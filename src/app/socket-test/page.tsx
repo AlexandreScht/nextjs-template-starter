@@ -1,7 +1,7 @@
 "use client";
 
 import { EVENT_SCHEMA } from "@/libs/SocketEvents";
-import { useSocket } from "@/hooks/providers/SocketProvider";
+import { useSocket } from "@/providers/SocketProvider";
 import { useEffect, useState } from "react";
 
 export default function SocketTestPage() {

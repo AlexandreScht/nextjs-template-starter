@@ -1,4 +1,4 @@
-import ServiceBridgeProvider from "@/hooks/providers/ServiceBridgeProvider";
+import ServiceBridgeProvider from "@/providers/ServiceBridgeProvider";
 import { callService } from "@/hooks/serverService";
 import { dehydrate, QueryClient } from "@tanstack/react-query";
 import ServerServicePageClient from "../../../components/services-test/clientPage";

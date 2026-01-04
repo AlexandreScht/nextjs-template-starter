@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { ServiceEventContext } from "./providers/servicesProvider";
+import { ServiceEventContext } from "../providers/servicesProvider";
 
 export function useServicesEvent() {
     const context = useContext(ServiceEventContext);
