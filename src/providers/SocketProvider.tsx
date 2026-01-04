@@ -1,11 +1,11 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
-import { socketConfig } from "@/config/socket.config";
+import { socketConfig } from "@/config/socket";
 import {
   type SocketContextType,
   type SocketProviderProps,
-} from "@/interfaces/SocketContext";
+} from "@/interfaces/socketContext";
 import { SocketEmitter, SocketReceiver } from "@/libs/SocketEvents";
 import React, {
   createContext,

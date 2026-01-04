@@ -1,14 +1,12 @@
-import { type EVENTS, type SocketEventPayloads } from "@/libs/SocketEvents";
+import { type SocketEmitter, type SocketReceiver } from "@/libs/SocketEvents";
 import type { Socket } from "socket.io-client";
 
 export interface SocketContextType {
     socket: Socket | null;
-    events: SocketEvents | null;
+    emitter: SocketEmitter | null;
+    receiver: SocketReceiver | null;
     isConnected: boolean;
-    subscribe: <K extends (typeof EVENTS.ON)[keyof typeof EVENTS.ON]>(
-        key: K,
-        callback: (data: SocketEventPayloads[K]) => void,
-    ) => () => void;
+    subscribe: (setup: (receiver: SocketReceiver) => () => void) => () => void;
 }
 
 export interface SocketProviderProps {
