@@ -1,34 +1,53 @@
-import type { AxiosRequestConfigWithMeta } from "@/interfaces/instances";
+import env from "@/config";
 import { isServer } from "@tanstack/react-query";
-import { AxiosHeaders } from "axios";
 
-export function ensureHeaders(headers?: AxiosRequestConfigWithMeta["headers"]) {
-    if (headers instanceof AxiosHeaders) {
+/**
+ * Ensures headers are a standard Headers object
+ */
+export function ensureHeaders(headers?: HeadersInit | any): Headers {
+    if (headers instanceof Headers) {
         return headers;
     }
-    return AxiosHeaders.from(headers ?? {});
+    // Handle AxiosHeaders or generic objects
+    if (typeof headers === "object" && headers !== null) {
+        return new Headers(headers as Record<string, string>);
+    }
+    return new Headers(headers);
 }
 
-export function attachContextHeaders(config: AxiosRequestConfigWithMeta) {
+/**
+ * Attaches context headers (Locale, Version) to standard Headers object
+ */
+export function attachContextHeaders(headers: Headers) {
     if (isServer) return;
-    config.headers = ensureHeaders(config.headers);
+
     const locale = navigator.language || "en";
-    const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || "web";
-    config.headers["X-App-Locale"] = locale;
-    config.headers["X-App-Version"] = appVersion;
+    const appVersion = env.APP_VERSION;
+
+    headers.set("X-App-Locale", locale);
+    headers.set("X-App-Version", appVersion);
 }
 
+/**
+ * Starts request tracking
+ * @param context Any object that can hold metadata (like axios config or a custom context)
+ * @param pendingRequestCount Current pending count
+ * @returns New pending count
+ */
 export function beginRequestTracking(
-    config: AxiosRequestConfigWithMeta,
+    context: RequestContext,
     pendingRequestCount: number,
 ): number {
     if (isServer) return pendingRequestCount;
-    if (!config.metadata) {
-        config.metadata = {};
+
+    if (!context.metadata) {
+        context.metadata = {};
     }
+
     if (typeof performance !== "undefined") {
-        config.metadata.startTime = performance.now();
+        context.metadata.startTime = performance.now();
     }
+
     const nextCount = pendingRequestCount + 1;
     if (nextCount === 1) {
         window.dispatchEvent(new CustomEvent("axios:loading-start"));
@@ -36,16 +55,28 @@ export function beginRequestTracking(
     return nextCount;
 }
 
+/**
+ * Finalizes request tracking
+ * @param pendingRequestCount Current pending count
+ * @param context Context containing metadata (start time)
+ * @returns New pending count
+ */
 export function finalizeRequestTracking(
     pendingRequestCount: number,
-    config?: AxiosRequestConfigWithMeta,
+    context?: RequestContext,
 ): number {
     if (isServer) return pendingRequestCount;
-    if (config?.metadata?.startTime && typeof performance !== "undefined") {
-        const duration = performance.now() - config.metadata.startTime;
-        const label = config?.url
-            ? `${config.method ? `[${config.method.toUpperCase()}] ` : ""}${config.url}`
+
+    if (
+        env.NODE_ENV === "development" &&
+        context?.metadata?.startTime &&
+        typeof performance !== "undefined"
+    ) {
+        const duration = performance.now() - context.metadata.startTime;
+        const label = context.url
+            ? `${context.method ? `[${context.method.toUpperCase()}] ` : ""}${context.url}`
             : "request";
+
         window.dispatchEvent(
             new CustomEvent("axios:request-duration", {
                 detail: { url: label, duration },

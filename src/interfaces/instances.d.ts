@@ -1,20 +1,9 @@
-import type { AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
-
-export type RequestProps = {
-    data?: InternalAxiosRequestConfig["data"];
-    params?: InternalAxiosRequestConfig["params"];
-    [key: string]: unknown;
-};
-
-export interface AxiosRequestConfigWithMeta extends InternalAxiosRequestConfig {
+export interface RequestContext {
     metadata?: {
         startTime?: number;
     };
-    _retry?: boolean;
-    requestProps?: RequestProps;
+    headers?: HeadersInit;
+    url?: string;
+    method?: string;
+    [key: string]: any;
 }
-
-export type ApiClientConfig = Omit<
-    AxiosRequestConfig,
-    "method" | "data" | "params"
->;

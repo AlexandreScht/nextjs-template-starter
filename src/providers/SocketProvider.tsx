@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
+import env from "@/config";
 import { socketConfig } from "@/config/socket";
 import {
   type SocketContextType,
@@ -42,10 +43,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   >([]);
 
   useEffect(() => {
-    const socketInstance = io(
-      process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3000",
-      socketConfig,
-    );
+    const socketInstance = io(env.SOCKET_URI, socketConfig);
 
     socketInstance.on("connect", () => {
       console.log("Socket connected:", socketInstance.id);

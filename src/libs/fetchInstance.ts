@@ -30,7 +30,7 @@ export function createFetchInstance(
             ...restFetchOptions
         } = mergedConfig as any;
 
-        const finalBaseURL = baseURL || env.NEXT_PUBLIC_API_URL;
+        const finalBaseURL = baseURL || env.API_URI;
 
         const resolvedUrl = resolveUrl(finalBaseURL, configUrl || "");
         const finalUrl = applyParamsToUrl(resolvedUrl, params);

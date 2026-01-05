@@ -35,7 +35,7 @@ export function createApiClient(config?: ApiClientConfig): AxiosInstance {
             : (status: number) => status >= 200 && status < 300;
 
     const instance = axios.create({
-        baseURL: baseURL || env.NEXT_PUBLIC_API_URL,
+        baseURL: baseURL || env.API_URI,
         timeout: timeout || 30000,
         withCredentials: true,
         ...(withCredentials !== false

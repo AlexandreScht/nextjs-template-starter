@@ -10,18 +10,14 @@ export const serviceConfig = {
             },
         },
     },
-    server: {
-        allowedCorsOrigins: [
-            "https://api.stripe.com",
-            "https://auth.monservice.com",
-            // Ajoutez vos services tiers ici
-        ],
-        referrerPolicy: "strict-origin-when-cross-origin",
-    },
+    allowedCorsOrigins: [
+        "https://api.stripe.com",
+        "https://auth.monservice.com",
+        // Ajoutez vos services tiers ici
+    ],
+    referrerPolicy: "strict-origin-when-cross-origin",
 } satisfies {
     client: QueryClientConfig;
-    server: {
-        allowedCorsOrigins: string[];
-        referrerPolicy: ReferrerPolicy;
-    };
+    allowedCorsOrigins: string[];
+    referrerPolicy: ReferrerPolicy;
 };

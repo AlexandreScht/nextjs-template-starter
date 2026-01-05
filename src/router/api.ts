@@ -2,7 +2,7 @@ import { createRouteWithParams, createRoutes } from ".";
 
 const apiRoutes = createRoutes({
     api: {
-        refresh_endpoint: () => "/auth/refresh",
+        refresh_token: () => "/auth/refresh",
         users: {
             list: () => "/",
             getById: (id?: number | string) =>
