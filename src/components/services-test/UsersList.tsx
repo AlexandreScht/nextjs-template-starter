@@ -15,6 +15,7 @@ export function UsersList() {
     status,
   } = useService((services) => services.users.getUsers(), {
     queryKey: ["users"],
+
   });
 
   const [rerenderTick, setRerenderTick] = useState(0);

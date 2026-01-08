@@ -1,4 +1,5 @@
 import env from "@/config";
+import { type RequestContext } from "@/interfaces/instances";
 import { isServer } from "@tanstack/react-query";
 
 /**
@@ -50,7 +51,7 @@ export function beginRequestTracking(
 
     const nextCount = pendingRequestCount + 1;
     if (nextCount === 1) {
-        window.dispatchEvent(new CustomEvent("axios:loading-start"));
+        window.dispatchEvent(new CustomEvent("service:loading-start"));
     }
     return nextCount;
 }
@@ -78,7 +79,7 @@ export function finalizeRequestTracking(
             : "request";
 
         window.dispatchEvent(
-            new CustomEvent("axios:request-duration", {
+            new CustomEvent("service:request-duration", {
                 detail: { url: label, duration },
             }),
         );
@@ -86,7 +87,7 @@ export function finalizeRequestTracking(
 
     const nextCount = pendingRequestCount > 0 ? pendingRequestCount - 1 : 0;
     if (nextCount === 0) {
-        window.dispatchEvent(new CustomEvent("axios:loading-stop"));
+        window.dispatchEvent(new CustomEvent("service:loading-stop"));
     }
     return nextCount;
 }
@@ -97,7 +98,7 @@ export function notifyClient(
 ) {
     if (isServer) return;
     window.dispatchEvent(
-        new CustomEvent("axios:notification", {
+        new CustomEvent("service:notification", {
             detail: { message, type },
         }),
     );

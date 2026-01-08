@@ -1,49 +1,91 @@
 import env from "@/config";
 import { serviceConfig } from "@/config/services";
 import {
+    ClientException,
     ExpiredSessionError,
     InvalidArgumentError,
     InvalidRoleAccessError,
 } from "@/exceptions";
-import { type RequestContext } from "@/interfaces/instances";
+import {
+    type RequestInitWithContext,
+    type RequestContext,
+    type ResponseInitWithContext,
+    type ErrorData,
+} from "@/types/service";
 import apiRoutes from "@/router/api";
 import {
     attachContextHeaders,
     beginRequestTracking,
     finalizeRequestTracking,
     notifyClient,
-} from "@/utils/axiosFeatures";
+} from "@/utils/instanceFeatures";
 import { treaty } from "@elysiajs/eden";
 import { isServer } from "@tanstack/react-query";
 
-// Type Placeholder - To be replaced by: import type { App } from "your-backend/src"
-type App = any;
+import type { App } from "@/server/elysiaApp";
 
 const pendingRequestCount = { value: 0 };
+
+let refreshPromise: Promise<void> | null = null;
+
+/**
+ * Fonction dédiée à l'appel de refresh token
+ */
+const performRefreshToken = async () => {
+    try {
+        const res = await fetch(
+            `${env.API_URI}${apiRoutes.api.refresh_token()}`,
+            {
+                method: "POST",
+                credentials: "include",
+            },
+        );
+        if (!res.ok) throw new Error("Refresh failed");
+    } catch (error) {
+        notifyClient("Session expirée, reconnexion requise.");
+        throw error;
+    } finally {
+        refreshPromise = null;
+    }
+};
 
 /**
  * Custom fetch wrapper to handle Base URL and 401 Refresh Token Loop
  */
 const customFetcher = async (
     input: RequestInfo | URL,
-    init?: RequestInit,
-): Promise<Response> => {
-    const response = await fetch(input, init);
+    init?: RequestInitWithContext,
+): Promise<ResponseInitWithContext> => {
+    const response = (await fetch(input, init)) as ResponseInitWithContext;
 
     //? if user is not authenticated, try to refresh token
     if (response.status === 401) {
         const urlStr = input.toString();
         if (!urlStr.includes(apiRoutes.api.refresh_token())) {
             try {
-                await fetch(`${env.API_URI}${apiRoutes.api.refresh_token()}`, {
-                    method: "POST",
-                    credentials: "include",
-                });
-                return await fetch(input, init);
+                if (!refreshPromise) {
+                    refreshPromise = performRefreshToken();
+                }
+                await refreshPromise;
+
+                const retryResponse = (await fetch(
+                    input,
+                    init,
+                )) as ResponseInitWithContext;
+
+                if (init?._context) {
+                    retryResponse._context = init._context;
+                }
+                return retryResponse;
             } catch {
                 notifyClient("Session expirée, reconnexion requise.");
             }
         }
+    }
+
+    //? Attach context to response so onResponse can read it
+    if (init?._context) {
+        response._context = init._context;
     }
 
     return response;
@@ -118,55 +160,45 @@ export const servicesInstance = treaty<App>(env.API_URI, {
                 context,
                 pendingRequestCount.value,
             );
+
+            (config as RequestInitWithContext)._context = context;
         }
     },
 
     //* 3. Response Interceptor (Tracking End & Error Notifications)
-    onResponse: async (response) => {
-        // Tracking End
-        // We don't have easy access to the exact 'config' object from onRequest to calculate duration
-        // UNLESS Eden attaches it to response? Usually not.
-        // For now we stop the loading indicator. Duration tracking might be less accurate or skipped here
-        // unless we used 'fetcher' wrapper for it.
-        // ACTUALLY: User asked to use onResponse. We will use it for at least finalizeRequestTracking (count decrement).
-
+    onResponse: async (response: ResponseInitWithContext) => {
         if (!isServer) {
+            const context = response._context as RequestContext | undefined;
             pendingRequestCount.value = finalizeRequestTracking(
                 pendingRequestCount.value,
-                // We can't pass the original request context here easily to get startTime
-                // So duration reporting might be missing, but 'loading-stop' will work.
-                undefined,
+                context,
             );
         }
 
-        // Error Notifications (4xx / 5xx)
         if (!response.ok) {
-            const status = response.status;
+            const { status } = response;
 
-            // 401 handled in fetcher (for retry), but notification might still occur if retry failed?
-            // If retry happened in fetcher and succeeded, response.ok would be true (the retried one).
-            // If retry failed, we get 401 again.
+            let errorData: ErrorData = {};
+            try {
+                errorData = (await response.clone().json()) as ErrorData;
+            } catch {}
 
             if (status >= 400 && status < 500 && status !== 401 && !isServer) {
                 let msg = "Une erreur est survenue";
                 try {
-                    // Clone because body might be used by caller
-                    const errorData = await response.clone().json();
                     msg =
-                        errorData.message ||
-                        errorData.error ||
-                        response.statusText;
+                        errorData?.message ||
+                        errorData?.error ||
+                        "Une erreur est survenue";
                 } catch {}
                 notifyClient(msg, "error");
             }
 
-            // Throw specific errors so calling code behaves like before
-            // Note: This makes treaty call throw instead of returning { data, error }
-            await throwSpecificError(response);
+            await throwSpecificError(response, errorData);
         }
     },
 
-    // 4. Custom Fetcher (Retry logic)
+    //* 4. Custom Fetcher (Retry logic)
     fetcher: customFetcher,
 });
 
@@ -176,14 +208,7 @@ export type ServicesInstance = typeof servicesInstance;
  * Error Mapping Helper
  * (Kept independent to be clean)
  */
-async function throwSpecificError(response: Response) {
-    let errorData: any = {};
-    try {
-        errorData = await response.clone().json();
-    } catch {
-        /* ignore */
-    }
-
+async function throwSpecificError(response: Response, errorData: ErrorData) {
     const errorMsg =
         errorData.message || errorData.error || response.statusText;
     const status = response.status;
@@ -191,8 +216,7 @@ async function throwSpecificError(response: Response) {
     switch (status) {
         case 605:
             throw new InvalidRoleAccessError(errorMsg || "Access denied");
-        case 999:
-            // Match logic from axiosInstance: check strict "Session expired" or similar
+        case 401:
             if (
                 errorMsg === "Session expired" ||
                 errorMsg.includes("expired")
@@ -205,10 +229,12 @@ async function throwSpecificError(response: Response) {
         case 429:
             throw new InvalidArgumentError("Too many requests");
         default:
-            if (status >= 500) {
-                throw new InvalidArgumentError("Server error occurred");
-            }
-            throw new Error(errorMsg);
+            throw new ClientException(
+                status,
+                typeof errorMsg === "string"
+                    ? errorMsg
+                    : JSON.stringify(errorMsg),
+            );
     }
 }
 

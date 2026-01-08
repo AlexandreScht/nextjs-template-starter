@@ -1,4 +1,4 @@
-import { type AppStore } from "@/interfaces/stores";
+import { type AppStore } from "@/types/stores";
 import { createStore, type StoreApi } from "zustand";
 import {
     createJSONStorage,

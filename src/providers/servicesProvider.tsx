@@ -1,33 +1,19 @@
 "use client";
 
-import { type ApiClientConfig } from "@/interfaces/instances";
-import { createApiClient } from "@/libs/axiosInstance";
-import { createServices, type Services } from "@/services";
-import type { AxiosInstance } from "axios";
+import { Services } from "@/services";
 import {
   createContext,
+  type ReactNode,
   useEffect,
   useMemo,
   useState,
-  type ReactNode,
 } from "react";
 import QueryProvider from "./QueryProvider";
-
-interface ServiceContextValue {
-  apiClient: AxiosInstance;
-  services: Services;
-}
-
-type ServiceNotification = {
-  message: string;
-  type: "error" | "success";
-};
-
-type ServiceEventState = {
-  isLoading: boolean;
-  lastDuration: { url?: string; duration: number } | null;
-  lastNotification: ServiceNotification | null;
-};
+import {
+  type ServiceContextValue,
+  type ServiceEventState,
+  type ServiceNotification,
+} from "@/types/service";
 
 export const ServiceContext = createContext<ServiceContextValue | undefined>(
   undefined,
@@ -37,30 +23,18 @@ export const ServiceEventContext = createContext<ServiceEventState | undefined>(
   undefined,
 );
 
-interface ServicesProviderProps {
-  children: ReactNode;
-  apiConfig?: ApiClientConfig;
-}
-
-export function ServicesProvider({
-  children,
-  apiConfig,
-}: ServicesProviderProps) {
+export function ServicesProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [lastDuration, setLastDuration] =
     useState<ServiceEventState["lastDuration"]>(null);
   const [lastNotification, setLastNotification] =
     useState<ServiceNotification | null>(null);
 
-  const apiClient = useMemo(() => createApiClient(apiConfig), [apiConfig]);
-  const services = useMemo(() => createServices(apiClient), [apiClient]);
-
   const value = useMemo(
     () => ({
-      apiClient,
-      services,
+      services: new Services({ cache: "no-store" } as const),
     }),
-    [apiClient, services],
+    [],
   );
 
   useEffect(() => {
@@ -84,26 +58,26 @@ export function ServicesProvider({
       }
     };
 
-    window.addEventListener("axios:loading-start", handleLoadingStart);
-    window.addEventListener("axios:loading-stop", handleLoadingStop);
+    window.addEventListener("service:loading-start", handleLoadingStart);
+    window.addEventListener("service:loading-stop", handleLoadingStop);
     window.addEventListener(
-      "axios:request-duration",
+      "service:request-duration",
       handleDuration as EventListener,
     );
     window.addEventListener(
-      "axios:notification",
+      "service:notification",
       handleNotification as EventListener,
     );
 
     return () => {
-      window.removeEventListener("axios:loading-start", handleLoadingStart);
-      window.removeEventListener("axios:loading-stop", handleLoadingStop);
+      window.removeEventListener("service:loading-start", handleLoadingStart);
+      window.removeEventListener("service:loading-stop", handleLoadingStop);
       window.removeEventListener(
-        "axios:request-duration",
+        "service:request-duration",
         handleDuration as EventListener,
       );
       window.removeEventListener(
-        "axios:notification",
+        "service:notification",
         handleNotification as EventListener,
       );
     };

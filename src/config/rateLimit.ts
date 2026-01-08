@@ -1,4 +1,4 @@
-import type { RateLimitConfig } from "@/interfaces/rateLimit";
+import type { RateLimitConfig } from "@/types/rateLimit";
 
 export const defaultRateLimitConfig: RateLimitConfig = {
     maxRequests: 10, // 10 requests

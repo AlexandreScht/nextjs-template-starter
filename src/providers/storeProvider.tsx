@@ -1,6 +1,6 @@
 "use client";
 import { ClientException } from "@/exceptions/errors";
-import { type AppStore, type StoreProviderProps } from "@/interfaces/stores";
+import { type AppStore, type StoreProviderProps } from "@/types/stores";
 import prepareStore from "@/stores";
 import { createContext, useContext, useState } from "react";
 import { type StoreApi, useStore as useZustandStore } from "zustand";

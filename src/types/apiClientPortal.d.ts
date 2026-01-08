@@ -1,19 +1,28 @@
-import type { ApiResponse } from "@/interfaces/apiClient";
-import type { RateLimitConfig } from "@/interfaces/rateLimit";
+import type { RateLimitConfig } from "@/types/rateLimit";
 
 /**
  * Type pour la fonction d'exécution de la requête.
  * Prend en entrée les données typées TInput et retourne une Promise de ApiResponse<TResponse>.
  */
-export type RequestExecutor<TInput, TResponse> = (
+export type RequestExecutor<TInput, TResponse, TOpts> = (
     data: TInput,
-) => Promise<ApiResponse<TResponse>>;
+    options?: TOpts,
+) => Promise<TResponse>;
 
 /**
  * Options de configuration pour le portail client API.
  * Ce wrapper unifie la gestion du Rate Limiting, de la validation et des callbacks.
  */
-export interface PortalOptions<TInput, TResponse, TValidated, TReturn> {
+export interface PortalOptions<
+    TInput,
+    TResponse extends { data: any; error?: any },
+    // Si TResponse a une propriété 'data', on l'utilise, sinon on fallback sur TResponse global ou any
+    TValidated = TResponse extends { data: infer D } ? D : TResponse,
+    TReturn = TValidated,
+    // Le type de retour en cas d'erreur. Par défaut 'never' (suppose que onError throw)
+    TErrorReturn = never,
+    TOpts = any,
+> {
     /**
      * Fonction de validation des données d'entrée.
      * @returns Les données validées de type TInput.
@@ -37,9 +46,10 @@ export interface PortalOptions<TInput, TResponse, TValidated, TReturn> {
      * C'est ici que vous appelez votre client API (axios, fetch, etc.).
      *
      * @param data Les données d'entrée (potentiellement validées par requestValidator).
+     * @param options Les options fusionnées à passer à l'appel.
      * @returns Une Promise contenant la réponse API.
      */
-    request: RequestExecutor<TInput, TResponse>;
+    request: RequestExecutor<TInput, TResponse, TOpts>;
 
     /**
      * Fonction de validation et transformation de la réponse API.
@@ -49,7 +59,10 @@ export interface PortalOptions<TInput, TResponse, TValidated, TReturn> {
      * @returns Les données validées/transformées de type TValidated.
      * @example (data) => validate(UserResponseSchema, data)
      */
-    responseValidator?: (data: TResponse) => TValidated;
+    // On extrait 'data' de TResponse pour le validateur
+    responseValidator?: (
+        data: TResponse extends { data: infer D } ? D : TResponse,
+    ) => TValidated;
 
     /**
      * Callback appelé en cas de succès de tout le processus.
@@ -63,7 +76,7 @@ export interface PortalOptions<TInput, TResponse, TValidated, TReturn> {
      * Callback appelé en cas d'erreur à n'importe quelle étape (Rate Limit, Validation, Requête).
      *
      * @param error L'erreur survenue.
-     * @returns La valeur de retour en cas d'erreur (TReturn).
+     * @returns La valeur de retour en cas d'erreur (TErrorReturn).
      */
-    onError?: (error: unknown) => TReturn;
+    onError?: (error: unknown) => TErrorReturn;
 }

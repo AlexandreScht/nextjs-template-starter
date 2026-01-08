@@ -4,7 +4,7 @@ import { ValidationException } from "../exceptions";
 import type {
     ValidationErrorDetail,
     ZodIssueExtended,
-} from "../interfaces/validator";
+} from "../types/validator";
 import { customErrorMap } from "../utils/zodErrorMap";
 
 z.config({ customError: customErrorMap as $ZodErrorMap<$ZodIssue> });

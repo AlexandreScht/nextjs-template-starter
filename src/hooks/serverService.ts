@@ -1,14 +1,14 @@
-import type { FetchRequestOptions } from "@/interfaces/apiClient";
-import { createFetchInstance } from "@/libs/fetchInstance";
-import { createServices, type Services } from "@/services";
+import { createServices } from "@/services";
+import type { Selector, serverOptions } from "@/types/service";
+import { isServer } from "@tanstack/react-query";
 
 /**
- * Helper pour appeler un service coté serveur (SSR) avec une configuration spécifique.
- * Crée une nouvelle instance de fetch pour chaque appel afin d'isoler la configuration (headers, cache, etc).
+ * Helper to call a service server-side (SSR) with specific configuration.
+ * Creates a new service instance for each call to isolate configuration (headers, cache, etc).
  *
- * @param selector Fonction de sélection du service à appeler
- * @param options Options de configuration de la requête (headers, cache Next.js, etc)
- * @returns Le résultat de l'appel au service
+ * @param selector Function to select the service to call
+ * @param options Request configuration options (headers, cache Next.js, etc)
+ * @returns The result of the service call
  *
  * @example
  * const users = await callService(
@@ -16,11 +16,18 @@ import { createServices, type Services } from "@/services";
  *   { next: { revalidate: 60 } }
  * );
  */
-export async function callService<T>(
-    selector: (services: Services) => Promise<T>,
-    options?: FetchRequestOptions,
-): Promise<T> {
-    const apiClient = createFetchInstance(options);
-    const services = createServices(apiClient);
-    return selector(services);
+export async function callService<TResult>(
+    selector: Selector<TResult>,
+    options?: serverOptions,
+): Promise<{ data: TResult | undefined; error: unknown }> {
+    if (!isServer) {
+        throw new Error("callService cannot be used on the client");
+    }
+    const services = createServices<serverOptions>(options);
+    try {
+        const data = await selector(services);
+        return { data, error: null };
+    } catch (error) {
+        return { data: undefined, error };
+    }
 }

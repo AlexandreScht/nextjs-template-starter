@@ -34,12 +34,16 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemesProvider>
-          <ServicesProvider>
-            <SocketProvider>
-              <StoreProvider>
-                <UiLibraryProviders>{children}</UiLibraryProviders>
-              </StoreProvider>
-            </SocketProvider>
+          <ServicesProvider
+            defaultOptions={{
+              defaultOptions: { queries: { retryDelay: 1000 } },
+            }}
+          >
+            {/* <SocketProvider> */}
+            <StoreProvider>
+              <UiLibraryProviders>{children}</UiLibraryProviders>
+            </StoreProvider>
+            {/* </SocketProvider> */}
           </ServicesProvider>
         </ThemesProvider>
       </body>

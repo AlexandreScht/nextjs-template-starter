@@ -1,44 +1,38 @@
-import type { ApiClient, ApiRequestConfig } from "@/interfaces/apiClient";
-import type { CreateUserDto, User } from "@/interfaces/models/users";
-import { apiClientPortal } from "@/libs/apiClientPortal";
+import type { CreateUserDto } from "@/interfaces/models/users";
+import { servicesInstance } from "@/libs/servicesInstance";
 import { validate } from "@/middlewares/validator";
-import apiRoutes from "@/router/api";
+import { type serviceOptions } from "@/types/service";
 import {
     CreateUserSchema,
     UpdateUserSchema,
     UserSchema,
 } from "@/validators/user.schema";
+import { ApiClientPortal } from "@/libs/apiClientPortal";
 
-export class ExampleService {
-    private router = apiRoutes.api.users;
-    constructor(private apiClient: ApiClient) {}
+export class ExampleService<
+    TOpts = serviceOptions,
+> extends ApiClientPortal<TOpts> {
+    private request = servicesInstance.users;
+
+    constructor(defaultOptions?: TOpts) {
+        super(defaultOptions);
+    }
 
     async getUsers() {
-        return (await this.apiClient.get<User[]>(this.router.list())).data;
+        return await this.apiClientPortal({
+            rateLimitConfig: { maxRequests: 20 },
+            request: () => this.request.get(),
+            onError: (error) => {
+                throw error;
+            },
+        });
     }
 
-    async getUsersWithCacheProof() {
-        const [users, proof] = await Promise.all([
-            this.getUsers(),
-            (
-                await this.apiClient.get<{ generatedAt: number }>(
-                    this.router.cacheProof(),
-                )
-            ).data,
-        ]);
-
-        return {
-            users,
-            cacheProof: proof.generatedAt,
-        };
-    }
-
-    async getUserById(id: number, config?: ApiRequestConfig) {
-        return await apiClientPortal({
+    async getUserById(id: number) {
+        return await this.apiClientPortal({
             rateLimitConfig: { maxRequests: 20 },
             requestValidator: () => validate(UserSchema, { id }),
-            request: (v) =>
-                this.apiClient.get<User>(this.router.getById(v.id), config),
+            request: (v) => this.request({ id: v.id }).get(),
             responseValidator: (data) => validate(UserSchema, data),
             onSuccess: (data) => data,
             onError: (error) => {
@@ -51,31 +45,36 @@ export class ExampleService {
         });
     }
 
-    async createUser(data: CreateUserDto) {
-        return await apiClientPortal({
-            requestValidator: () => validate(CreateUserSchema, data),
-            request: (validData) =>
-                this.apiClient.post<User>(this.router.create(), validData),
-            responseValidator: (d) => validate(UserSchema, d),
-            onSuccess: (user) => user,
+    async createUser(createUserDto: CreateUserDto) {
+        return await this.apiClientPortal({
+            requestValidator: () => validate(CreateUserSchema, createUserDto),
+            request: (v) => this.request.post(v),
+            responseValidator: (data) => validate(UserSchema, data),
             onError: (error) => {
-                console.error("Erreur création user", error);
                 throw error;
             },
         });
     }
 
-    async updateUser(id: number, data: Partial<CreateUserDto>) {
-        return await apiClientPortal({
-            requestValidator: () => validate(UpdateUserSchema, data),
-            request: (validData) =>
-                this.apiClient.patch<User>(this.router.getById(id), validData),
-            responseValidator: (d) => validate(UserSchema, d),
-            onSuccess: (user) => user,
+    async updateUser(id: number, updateUserDto: Partial<CreateUserDto>) {
+        return await this.apiClientPortal({
+            requestValidator: () => validate(UpdateUserSchema, updateUserDto),
+            request: (v) => this.request({ id }).patch(v),
+            responseValidator: (data) => validate(UserSchema, data),
+            onError: (error) => {
+                throw error;
+            },
         });
     }
 
     async deleteUser(id: number) {
-        return this.apiClient.delete(this.router.delete(id));
+        console.log("ici");
+
+        return await this.apiClientPortal({
+            request: () => this.request({ id }).delete(),
+            onError: (error) => {
+                throw error;
+            },
+        });
     }
 }

@@ -1,4 +1,4 @@
-import type { ValidationErrorDetail } from "../interfaces/validator";
+import type { ValidationErrorDetail } from "../types/validator";
 
 export class ClientException extends Error {
     public status: number | string;

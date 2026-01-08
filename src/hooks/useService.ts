@@ -1,24 +1,11 @@
-import type { Services } from "@/services";
-import {
-    useQuery,
-    type QueryKey,
-    type UseQueryOptions,
-    type UseQueryResult,
-} from "@tanstack/react-query";
-import { type AxiosRequestConfig } from "axios";
+import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { useContext } from "react";
 import { ServiceContext } from "../providers/servicesProvider";
-
-type Selector<T> = (services: Services) => T;
-type AsyncSelector<TResult, TConfig = AxiosRequestConfig | undefined> = (
-    services: Services,
-    requestConfig?: TConfig,
-) => Promise<TResult> | TResult;
-
-type UseServiceQueryOptions<TResult, TConfig> = {
-    queryKey?: QueryKey;
-    requestConfig?: TConfig;
-} & Omit<UseQueryOptions<TResult>, "queryKey" | "queryFn">;
+import type {
+    Selector,
+    Services,
+    UseServiceQueryOptions,
+} from "@/types/service";
 
 function useBaseService() {
     const callServices = useContext(ServiceContext);
@@ -29,25 +16,43 @@ function useBaseService() {
     return callServices.services;
 }
 
-export function useServiceInstance<T>(selector: Selector<T>): T {
+export function useServiceInstance<T>(selector: (services: Services) => T): T {
     const services = useBaseService();
     return selector(services);
 }
 
-export function useService<TResult, TConfig = AxiosRequestConfig | undefined>(
-    selector: AsyncSelector<TResult, TConfig>,
-    options?: UseServiceQueryOptions<TResult, TConfig>,
+/**
+ * Helper to call a service client-side (CSR) with React Query integration.
+ * Uses the shared service instance from the provider context.
+ *
+ * @param selector Function to select the service to call
+ * @param options React Query options (queryKey, enabled, initialData, etc)
+ * @returns The result of the service call wrapped in a React Query result
+ *
+ * @example
+ * const { data: users, isLoading } = useService(
+ *   (services) => services.users.getUsers(),
+ *   { enabled: !!userId }
+ * );
+ */
+export function useService<TResult>(
+    selector: Selector<TResult>,
+    options?: UseServiceQueryOptions<TResult>,
 ): UseQueryResult<TResult> {
     const services = useBaseService();
 
-    const queryKey = options?.queryKey ?? [
-        "service",
-        selector.name || "anonymous",
-    ];
+    const { fetchOptions, queryKey: key, ...restOptions } = options || {};
+
+    const callingServices = services.with({
+        ...fetchOptions,
+        cache: "no-store",
+    });
+
+    const queryKey = key ?? ["service", selector.name || "anonymous"];
 
     return useQuery({
-        ...options,
+        ...restOptions,
         queryKey,
-        queryFn: async () => selector(services, options?.requestConfig),
+        queryFn: async () => selector(callingServices),
     });
 }
