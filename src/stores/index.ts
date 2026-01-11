@@ -9,7 +9,7 @@ import { immer } from "zustand/middleware/immer";
 import createExampleSlice from "./example";
 import createTodoSlice from "./todos";
 
-export const slices = [createExampleSlice, createTodoSlice] as const;
+export const slices = [createExampleSlice, createTodoSlice];
 
 const getStorage = (type: "local" | "session") => {
     if (typeof window === "undefined") {
@@ -37,7 +37,7 @@ export default function prepareStore(
             subscribeWithSelector(
                 immer((...a) => {
                     const combinedSlices = slices.reduce(
-                        (acc, slice) => ({ ...acc, ...slice(...a) }),
+                        (acc, slice) => ({ ...acc, ...(slice as any)(...a) }),
                         {} as AppStore,
                     );
 

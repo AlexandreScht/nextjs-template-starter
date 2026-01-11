@@ -10,9 +10,13 @@ export default async function ServerServicePage() {
   await queryClient.prefetchQuery({
     queryKey: ["users", "cache-proof"],
     queryFn: () =>
-      callService((services) => services.users.getUsersWithCacheProof(), {
+      callService((services) => services.users.getUsers(), {
         next: { revalidate: 25 },
       }),
+  });
+
+  const { data } = await callService((services) => services.users.getUsers(), {
+    next: { revalidate: 25 },
   });
 
   const steps = [

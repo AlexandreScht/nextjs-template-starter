@@ -1,32 +1,21 @@
 import { type createServices } from "@/services";
-import { type clientOptions } from "./service";
-import type { NextFetchRequestConfig } from "./serviceContext";
 import { type UseQueryOptions } from "@tanstack/react-query";
-export type ServiceResponse<T> = {
-    data: T;
-    error: unknown;
-    status: number;
-    headers?: HeadersInit | Record<string, unknown> | any;
-};
-
-// Removed local non-exported Services/PublicServices types that might conflict or be unused,
-// keeping the exported Services type below.
 
 export type Services<TOpts = serviceOptions> = ReturnType<
     typeof createServices<TOpts>
 >;
 
-interface ServiceContextValue {
+export interface ServiceContextValue {
     services: Services;
     defaultOptions?: clientOptions;
 }
 
-type ServiceNotification = {
+export type ServiceNotification = {
     message: string;
     type: "error" | "success";
 };
 
-type ServiceEventState = {
+export type ServiceEventState = {
     isLoading: boolean;
     lastDuration: { url?: string; duration: number } | null;
     lastNotification: ServiceNotification | null;
@@ -56,15 +45,12 @@ export interface ErrorData {
 }
 
 type PublicServices = Omit<Services, "with">;
-type Selector<TResult> = (
+
+export type Selector<TResult> = (
     services: PublicServices,
 ) => Promise<TResult> | TResult;
 
-// type Selector<TResult> = (
-//     services: Services<clientOptions>,
-// ) => Promise<TResult> | TResult;
-
-type UseServiceQueryOptions<TResult> = Omit<
+export type UseServiceQueryOptions<TResult> = Omit<
     UseQueryOptions<TResult>,
     "queryFn" | "queryKey"
 > & {
@@ -178,7 +164,7 @@ export type serverOptions = Omit<
      */
     next?: NextFetchRequestConfig;
 };
-export type clientOptions = Omit<
+type clientOptions = Omit<
     RequestInit,
     "body" | "method" | "window" | "mode" | "credentials" | "next" | "cache"
 > & {

@@ -1,4 +1,4 @@
-import type { CreateUserDto } from "@/interfaces/models/users";
+import type { CreateUserDto } from "@/interfaces/modelsDto";
 import { servicesInstance } from "@/libs/servicesInstance";
 import { validate } from "@/middlewares/validator";
 import { type serviceOptions } from "@/types/service";

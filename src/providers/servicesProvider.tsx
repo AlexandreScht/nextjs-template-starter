@@ -1,6 +1,6 @@
 "use client";
 
-import { Services } from "@/services";
+import { createServices } from "@/services";
 import {
   createContext,
   type ReactNode,
@@ -32,7 +32,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
-      services: new Services({ cache: "no-store" } as const),
+      services: createServices({ cache: "no-store" } as const),
     }),
     [],
   );

@@ -3,7 +3,7 @@ import type {
     QueryType,
     RouteObject,
     RoutesPropsType,
-} from "@/interfaces/routes";
+} from "@/types/routes";
 
 export function createRouteWithProps(
     route: string,

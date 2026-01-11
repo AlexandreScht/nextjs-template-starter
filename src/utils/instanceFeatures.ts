@@ -1,5 +1,5 @@
 import env from "@/config";
-import { type RequestContext } from "@/interfaces/instances";
+import { type RequestContext } from "@/types/service";
 import { isServer } from "@tanstack/react-query";
 
 /**
@@ -13,7 +13,7 @@ export function ensureHeaders(headers?: HeadersInit | any): Headers {
     if (typeof headers === "object" && headers !== null) {
         return new Headers(headers as Record<string, string>);
     }
-    return new Headers(headers);
+    return new Headers();
 }
 
 /**

@@ -6,7 +6,7 @@ export interface ExampleState {
     };
 }
 
-export interface Todo {
+interface Todo {
     id: string;
     text: string;
     completed: boolean;

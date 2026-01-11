@@ -1,7 +1,7 @@
 import { defaultRateLimitConfig } from "@/config/rateLimit";
 import type { RateLimitConfig, RateLimiter } from "@/types/rateLimit";
 
-export class TokenBucketRateLimiter implements RateLimiter {
+class TokenBucketRateLimiter implements RateLimiter {
     private tokens: number;
     private lastRefill: number;
     private readonly maxTokens: number;

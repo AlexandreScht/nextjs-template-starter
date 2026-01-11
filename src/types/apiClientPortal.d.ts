@@ -1,27 +1,21 @@
 import type { RateLimitConfig } from "@/types/rateLimit";
 
-/**
- * Type pour la fonction d'exécution de la requête.
- * Prend en entrée les données typées TInput et retourne une Promise de ApiResponse<TResponse>.
- */
-export type RequestExecutor<TInput, TResponse, TOpts> = (
+type RequestExecutor<TInput, TResponse, TOpts> = (
     data: TInput,
     options?: TOpts,
 ) => Promise<TResponse>;
-
+export type ExtractResponseData<T> = T extends { data: infer D } ? D : T;
 /**
  * Options de configuration pour le portail client API.
  * Ce wrapper unifie la gestion du Rate Limiting, de la validation et des callbacks.
  */
 export interface PortalOptions<
     TInput,
-    TResponse extends { data: any; error?: any },
-    // Si TResponse a une propriété 'data', on l'utilise, sinon on fallback sur TResponse global ou any
-    TValidated = TResponse extends { data: infer D } ? D : TResponse,
+    TResponse extends { data: unknown; error?: unknown },
+    TValidated = ExtractResponseData<TResponse>,
     TReturn = TValidated,
-    // Le type de retour en cas d'erreur. Par défaut 'never' (suppose que onError throw)
     TErrorReturn = never,
-    TOpts = any,
+    TOpts = unknown,
 > {
     /**
      * Fonction de validation des données d'entrée.
@@ -59,10 +53,7 @@ export interface PortalOptions<
      * @returns Les données validées/transformées de type TValidated.
      * @example (data) => validate(UserResponseSchema, data)
      */
-    // On extrait 'data' de TResponse pour le validateur
-    responseValidator?: (
-        data: TResponse extends { data: infer D } ? D : TResponse,
-    ) => TValidated;
+    responseValidator?: (data: ExtractResponseData<TResponse>) => TValidated;
 
     /**
      * Callback appelé en cas de succès de tout le processus.

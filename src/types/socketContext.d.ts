@@ -12,5 +12,3 @@ export interface SocketContextType {
 export interface SocketProviderProps {
     children: React.ReactNode;
 }
-
-export type SocketSubscriptionCallback = (data: unknown) => void;

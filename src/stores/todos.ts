@@ -4,23 +4,23 @@ import { type TodoState } from "@/interfaces/storeStates";
 const createTodoSlice: SliceStore<TodoState> = (set) => ({
     todos: {
         list: [],
-        addTodo: (text: string) =>
-            set((state: TodoState) => {
+        addTodo: (text) =>
+            set((state) => {
                 state.todos.list.push({
                     id: crypto.randomUUID(),
                     text,
                     completed: false,
                 });
             }),
-        removeTodo: (id: string) =>
-            set((state: TodoState) => {
+        removeTodo: (id) =>
+            set((state) => {
                 const index = state.todos.list.findIndex((t) => t.id === id);
                 if (index !== -1) {
                     state.todos.list.splice(index, 1);
                 }
             }),
-        toggleTodo: (id: string) =>
-            set((state: TodoState) => {
+        toggleTodo: (id) =>
+            set((state) => {
                 const todo = state.todos.list.find((t) => t.id === id);
                 if (todo) {
                     todo.completed = !todo.completed;

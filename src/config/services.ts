@@ -15,9 +15,11 @@ export const serviceConfig = {
         "https://auth.monservice.com",
         // Ajoutez vos services tiers ici
     ],
+    refreshTokenRoute: "/auth/refresh_token",
     referrerPolicy: "strict-origin-when-cross-origin",
 } satisfies {
     client: QueryClientConfig;
     allowedCorsOrigins: string[];
+    refreshTokenRoute: string;
     referrerPolicy: ReferrerPolicy;
 };

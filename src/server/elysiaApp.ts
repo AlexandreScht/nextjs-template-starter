@@ -22,10 +22,56 @@ export const app = new Elysia()
     .group("/users", (app) =>
         app
             .get("/", () => [] as User[])
-            .post("/", () => ({}))
-            .get("/:id", () => ({}))
-            .patch("/:id", () => ({}))
-            .delete("/:id", () => ({})),
+            .post(
+                "/",
+                ({ body }) => {
+                    return body as User;
+                },
+                {
+                    body: t.Object({
+                        name: t.String({ minLength: 2 }),
+                        email: t.String({ format: "email" }),
+                        password: t.String({ minLength: 8 }),
+                    }),
+                },
+            )
+            .get(
+                "/:id",
+                () => {
+                    return {} as User;
+                },
+                {
+                    params: t.Object({
+                        id: t.Numeric(),
+                    }),
+                },
+            )
+            .patch(
+                "/:id",
+                ({ body }) => {
+                    return body as User;
+                },
+                {
+                    params: t.Object({
+                        id: t.Numeric(),
+                    }),
+                    body: t.Object({
+                        name: t.String({ minLength: 2 }),
+                        email: t.String({ format: "email" }),
+                    }),
+                },
+            )
+            .delete(
+                "/:id",
+                () => {
+                    return { success: true };
+                },
+                {
+                    params: t.Object({
+                        id: t.Numeric(),
+                    }),
+                },
+            ),
     );
 
 export type App = typeof app;

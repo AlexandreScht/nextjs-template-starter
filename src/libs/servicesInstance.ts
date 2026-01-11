@@ -12,12 +12,12 @@ import {
     type ResponseInitWithContext,
     type ErrorData,
 } from "@/types/service";
-import apiRoutes from "@/router/api";
 import {
     attachContextHeaders,
     beginRequestTracking,
     finalizeRequestTracking,
     notifyClient,
+    ensureHeaders,
 } from "@/utils/instanceFeatures";
 import { treaty } from "@elysiajs/eden";
 import { isServer } from "@tanstack/react-query";
@@ -34,7 +34,7 @@ let refreshPromise: Promise<void> | null = null;
 const performRefreshToken = async () => {
     try {
         const res = await fetch(
-            `${env.API_URI}${apiRoutes.api.refresh_token()}`,
+            `${env.API_URI}${serviceConfig.refreshTokenRoute}`,
             {
                 method: "POST",
                 credentials: "include",
@@ -61,7 +61,7 @@ const customFetcher = async (
     //? if user is not authenticated, try to refresh token
     if (response.status === 401) {
         const urlStr = input.toString();
-        if (!urlStr.includes(apiRoutes.api.refresh_token())) {
+        if (!urlStr.includes(serviceConfig.refreshTokenRoute)) {
             try {
                 if (!refreshPromise) {
                     refreshPromise = performRefreshToken();
@@ -137,16 +137,7 @@ export const servicesInstance = treaty<App>(env.API_URI, {
 
         //? Override Headers logic (handled automatically by Eden merge)
         if (!isServer) {
-            if (!config.headers) {
-                config.headers = new Headers();
-            } else if (
-                !(config.headers instanceof Headers) &&
-                typeof config.headers === "object"
-            ) {
-                config.headers = new Headers(
-                    config.headers as Record<string, string>,
-                );
-            }
+            config.headers = ensureHeaders(config.headers);
 
             //? Tracking
             const context: RequestContext = {
@@ -201,8 +192,6 @@ export const servicesInstance = treaty<App>(env.API_URI, {
     //* 4. Custom Fetcher (Retry logic)
     fetcher: customFetcher,
 });
-
-export type ServicesInstance = typeof servicesInstance;
 
 /**
  * Error Mapping Helper

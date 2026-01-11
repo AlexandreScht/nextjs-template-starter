@@ -5,11 +5,11 @@ const createExampleSlice: SliceStore<ExampleState> = (set) => ({
     example: {
         score: 0,
         increase: () =>
-            set((state: ExampleState) => {
+            set((state) => {
                 state.example.score += 1;
             }),
         resetScore: () =>
-            set((state: ExampleState) => {
+            set((state) => {
                 state.example.score = 0;
             }),
     },

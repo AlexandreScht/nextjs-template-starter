@@ -1,12 +1,15 @@
 import { createRateLimiter, defaultRateLimiter } from "@/middlewares/rateLimit";
 
-import type { PortalOptions } from "@/types/apiClientPortal";
+import type {
+    ExtractResponseData,
+    PortalOptions,
+} from "@/types/apiClientPortal";
 
 /**
  * Classe de base pour les services API.
  * Gère l'injection automatique des options par défaut et le cycle de vie des requêtes.
  */
-export class ApiClientPortal<TOpts = any> {
+export class ApiClientPortal<TOpts = unknown> {
     constructor(protected defaultOptions?: TOpts) {}
 
     /**
@@ -15,8 +18,11 @@ export class ApiClientPortal<TOpts = any> {
      */
     protected async apiClientPortal<
         TInput = void,
-        TResponse extends { data: any; error?: any } = any,
-        TValidated = TResponse extends { data: infer D } ? D : TResponse,
+        TResponse extends { data: unknown; error?: unknown } = {
+            data: unknown;
+            error?: unknown;
+        },
+        TValidated = ExtractResponseData<TResponse>,
         TReturn = TValidated,
         TErrorReturn = never,
     >(
@@ -30,7 +36,6 @@ export class ApiClientPortal<TOpts = any> {
         >,
     ): Promise<TReturn | TErrorReturn> {
         try {
-            // Étape 0 : Rate Limiting
             const limiter = options.rateLimitConfig
                 ? createRateLimiter(options.rateLimitConfig)
                 : defaultRateLimiter;
@@ -39,33 +44,30 @@ export class ApiClientPortal<TOpts = any> {
 
             let requestPayload: TInput;
 
-            // Étape 1 : Validation de l'Input (si nécessaire)
             if (options.requestValidator) {
                 requestPayload = options.requestValidator();
             } else {
-                requestPayload = undefined as unknown as TInput;
+                requestPayload = undefined as TInput;
             }
 
-            // Étape 2 : Exécution de la requête
             const response = await options.request(
                 requestPayload,
                 this.defaultOptions,
             );
-            let responseData: unknown = response.data;
+            let responseData = response.data;
 
-            // Étape 3 : Validation / Transformation de la réponse
             if (options.responseValidator) {
-                responseData = options.responseValidator(response.data);
+                responseData = options.responseValidator(
+                    response.data as ExtractResponseData<TResponse>,
+                );
             }
 
-            // Étape 4 : Callback succès
             if (options.onSuccess) {
                 return options.onSuccess(responseData as TValidated);
             }
 
             return responseData as TReturn;
         } catch (error) {
-            // Étape 5 : Gestion d'erreur
             if (options.onError) {
                 return options.onError(error) as TErrorReturn;
             }

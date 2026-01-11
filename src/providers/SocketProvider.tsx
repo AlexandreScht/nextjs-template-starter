@@ -6,7 +6,7 @@ import { socketConfig } from "@/config/socket";
 import {
   type SocketContextType,
   type SocketProviderProps,
-} from "@/interfaces/socketContext";
+} from "@/types/socketContext";
 import { SocketEmitter, SocketReceiver } from "@/libs/SocketEvents";
 import React, {
   createContext,

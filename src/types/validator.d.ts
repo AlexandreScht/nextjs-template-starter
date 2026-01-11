@@ -17,12 +17,3 @@ export interface ZodIssueExtended {
     maximum?: number;
     inclusive?: boolean;
 }
-
-export interface ZodErrorMapContext {
-    defaultError?: string;
-}
-
-export type ZodErrorMapFunction = (
-    issue: ZodIssueExtended,
-    ctx: ZodErrorMapContext,
-) => { message: string };

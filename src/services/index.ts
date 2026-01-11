@@ -3,7 +3,7 @@ import { servicesInstance } from "@/libs/servicesInstance";
 import { ExampleService } from "./example.service";
 import { type serviceOptions } from "@/types/service";
 
-export class Services<TOpts = serviceOptions> {
+class Services<TOpts = serviceOptions> {
     constructor(private options?: TOpts) {}
 
     with(overrides: TOpts): Services<TOpts> {

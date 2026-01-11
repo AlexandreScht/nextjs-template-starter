@@ -1,6 +1,6 @@
 "use client";
 
-import { useStore } from "@/providers/storeProvider";
+import { useStore } from "@/hooks/useStore";
 import { type FormEvent, useState } from "react";
 
 export default function StoreDemoPage() {
